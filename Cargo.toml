@@ -1,0 +1,15 @@
+[package]
+name = "whetstone"
+version = "0.1.0"
+authors = ["Rowan <rowan.t.preston@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+
+[lib]
+name = "whetstone"
+path = "src/lib.rs"
+
+[[bin]]
+name = "whetstone-test"
+path = "src/test.rs"
