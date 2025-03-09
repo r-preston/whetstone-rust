@@ -5,6 +5,7 @@ authors = ["Rowan <rowan.t.preston@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+num-traits = "0.2.19"
 
 [lib]
 name = "whetstone"

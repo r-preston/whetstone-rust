@@ -1,13 +1,9 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-
 extern crate whetstone;
 
-use whetstone::{Equation, EquationFactory, Ruleset};
+use whetstone::{EquationFactory, Syntax, Variable};
 
 fn main() {
-    let factory = EquationFactory::new(Ruleset::Standard);
-    let equation = factory.equation("x");
-    println!("{}", equation.evaluate(0.0));
+    let factory = EquationFactory::new(Syntax::Standard);
+    let equation = factory.parse::<f32>("x").unwrap();
+    println!("{}", equation.evaluate(&[Variable::new("x", 0.0)]).unwrap());
 }
