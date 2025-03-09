@@ -6,18 +6,17 @@ mod expressions;
 
 pub use equation::Equation;
 pub use expressions::variable::Variable;
-pub use expressions::value::Value;
 //use function::Function;
 
 // define constraint for the type of value used by an Equation
 pub trait NumericType: num_traits::float::Float {}
 impl<T: num_traits::float::Float> NumericType for T {}
 
-
 #[derive(Debug)]
 pub enum ErrorType {
     SyntaxError,
     InvalidObject,
+    InternalError,
 }
 #[derive(Debug)]
 pub struct Error<'a> {
@@ -26,13 +25,15 @@ pub struct Error<'a> {
 }
 macro_rules! return_error {
     ($error_type:expr, $message:literal) => {
-        return Err(Error{
+        return Err(Error {
             error_type: $error_type,
-            message: $message
+            message: $message,
         });
     };
 }
 pub(crate) use return_error;
+
+type Value<'a, T> = Result<T, Error<'a>>;
 
 pub enum Syntax {
     Standard,

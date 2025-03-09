@@ -1,10 +1,11 @@
-pub mod value;
-pub mod variable;
+pub mod constant;
 pub mod function;
+pub mod variable;
 
-use crate::NumericType;
-use value::Value;
+use crate::{NumericType, Value};
 
-pub trait Expression<T: NumericType>{
-    fn evaluate(values: &[Value<T>]) -> Value<T>;
+pub trait Expression<'a, T: NumericType> {
+    fn evaluate(&self, values: &[Value<T>]) -> Value<'a, T>;
+
+    fn num_inputs(&self) -> u32;
 }
