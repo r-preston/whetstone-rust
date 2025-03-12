@@ -30,7 +30,7 @@ pub struct Equation<T: NumericType> {
 impl<T: NumericType> Equation<T> {
     pub fn evaluate(&self, variables: VariableValues<T>) -> Value<T> {
         if self.data.is_empty() {
-            return_error!(ErrorType::InvalidObject, "Equation is empty".to_string());
+            return_error!(ErrorType::NotInitialised, "Equation is empty".to_string());
         }
         for &(label, value) in variables.iter() {
             self.set_variable(label, value)?;
@@ -43,9 +43,12 @@ impl<T: NumericType> Equation<T> {
             Some(value_cell) => {
                 value_cell.replace(value);
                 return Ok(value_cell.get());
-            },
+            }
             None => {
-                return_error!(ErrorType::NoSuchVariable, "Equation does not contain a variable with that label".to_string());
+                return_error!(
+                    ErrorType::NoSuchVariable,
+                    "Equation does not contain a variable with that label".to_string()
+                );
             }
         }
     }
@@ -65,8 +68,9 @@ impl<T: NumericType> Equation<T> {
             None => {
                 // this shouldn't happen as it implies an expression takes a number of arguments that aren't in the data vec
                 return_error!(
-                    ErrorType::InvalidObject,
-                    "An unexpected error occured, equation data is internally inconsistent".to_string()
+                    ErrorType::InternalError,
+                    "An unexpected error occured, equation data is internally inconsistent"
+                        .to_string()
                 );
             }
         };

@@ -1,14 +1,14 @@
 use std::marker::PhantomData;
 
-use crate::{NumericType, Value};
 use super::Expression;
+use crate::{NumericType, Value};
 
 type InnerFunction<T> = fn(&[Value<T>]) -> Value<T>;
 
 pub struct Function<T> {
     function: InnerFunction<T>,
     num_inputs: u32,
-    phantom: PhantomData<T>
+    phantom: PhantomData<T>,
 }
 
 impl<T: NumericType> Function<T> {
