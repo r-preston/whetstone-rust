@@ -1,8 +1,11 @@
 use core::slice::Iter;
+use std::cell::Cell;
+use std::collections::HashMap;
 use std::marker::PhantomData;
+use std::rc::Rc;
 
 use crate::expressions::Expression;
-use crate::{return_error, Error, ErrorType, NumericType, Value, Variable};
+use crate::{return_error, Error, ErrorType, NumericType, Value, VariableValues};
 
 // equation has three components: constant, variable, function.
 // all return Value
@@ -16,23 +19,42 @@ use crate::{return_error, Error, ErrorType, NumericType, Value, Variable};
 
 pub struct Equation<'a, T: NumericType> {
     label: String,
+    // holds a list of expressions evaluated left to right
     data: Vec<Box<dyn Expression<'a, T>>>,
+    // holds Rcs for each variable in the equation, which are also held by Variables in `data`
+    variables: HashMap<String, Rc<Cell<T>>>,
+    // indicates return type of this equation
     phantom: PhantomData<T>,
 }
 
 impl<'a, T: NumericType> Equation<'a, T> {
-    pub fn evaluate(&self, variables: &[Variable<T>]) -> Value<T> {
+    pub fn evaluate(&self, variables: VariableValues<T>) -> Value<T> {
         if self.data.is_empty() {
             return_error!(ErrorType::InvalidObject, "Equation is empty");
         }
-        // todo: set variable values
+        for &(label, value) in variables.iter() {
+            self.set_variable(label, value)?;
+        }
         self.evaluate_equation(&mut self.data.iter())
+    }
+
+    pub fn set_variable(&self, label: &str, value: T) -> Value<T> {
+        match self.variables.get(label) {
+            Some(value_cell) => {
+                value_cell.replace(value);
+                return Ok(value_cell.get());
+            },
+            None => {
+                return_error!(ErrorType::NoSuchVariable, "Equation does not contain a variable with that label");
+            }
+        }
     }
 
     pub(crate) fn new(label: &str) -> Equation<T> {
         Equation {
             label: label.to_string(),
             data: Vec::new(),
+            variables: HashMap::new(),
             phantom: PhantomData,
         }
     }
@@ -41,6 +63,7 @@ impl<'a, T: NumericType> Equation<'a, T> {
         let expression = match iter.next() {
             Some(expression) => expression,
             None => {
+                // this shouldn't happen as it implies an expression takes a number of arguments that aren't in the data vec
                 return_error!(
                     ErrorType::InvalidObject,
                     "An unexpected error occured, equation data is internally inconsistent"

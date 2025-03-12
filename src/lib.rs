@@ -5,8 +5,6 @@ mod equation;
 mod expressions;
 
 pub use equation::Equation;
-pub use expressions::variable::Variable;
-//use function::Function;
 
 // define constraint for the type of value used by an Equation
 pub trait NumericType: num_traits::float::Float {}
@@ -16,6 +14,7 @@ impl<T: num_traits::float::Float> NumericType for T {}
 pub enum ErrorType {
     SyntaxError,
     InvalidObject,
+    NoSuchVariable,
     InternalError,
 }
 #[derive(Debug)]
@@ -33,6 +32,8 @@ macro_rules! return_error {
 }
 pub(crate) use return_error;
 
+// input and return types from an Equation
+pub type VariableValues<'a, T> = &'a[(&'a str, T)];
 type Value<'a, T> = Result<T, Error<'a>>;
 
 pub enum Syntax {
