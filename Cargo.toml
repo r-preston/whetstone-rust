@@ -1,7 +1,7 @@
 [package]
 name = "whetstone"
 version = "0.1.0"
-authors = ["Rowan <rowan.t.preston@gmail.com>"]
+authors = ["Rowan Preston <rowan.t.preston@gmail.com>"]
 edition = "2021"
 
 [dependencies]

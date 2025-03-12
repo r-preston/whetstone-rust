@@ -18,12 +18,12 @@ pub enum ErrorType {
     InternalError,
 }
 #[derive(Debug)]
-pub struct Error<'a> {
+pub struct Error {
     pub error_type: ErrorType,
-    pub message: &'a str,
+    pub message: String,
 }
 macro_rules! return_error {
-    ($error_type:expr, $message:literal) => {
+    ($error_type:expr, $message:expr) => {
         return Err(Error {
             error_type: $error_type,
             message: $message,
@@ -34,7 +34,7 @@ pub(crate) use return_error;
 
 // input and return types from an Equation
 pub type VariableValues<'a, T> = &'a[(&'a str, T)];
-type Value<'a, T> = Result<T, Error<'a>>;
+type Value<T> = Result<T, Error>;
 
 pub enum Syntax {
     Standard,

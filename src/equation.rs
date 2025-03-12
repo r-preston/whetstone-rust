@@ -17,20 +17,20 @@ use crate::{return_error, Error, ErrorType, NumericType, Value, VariableValues};
 // 1) list of things of type Component that have an evaluate() method that returns a Value
 // 2) separate lists for each type of thing
 
-pub struct Equation<'a, T: NumericType> {
+pub struct Equation<T: NumericType> {
     label: String,
     // holds a list of expressions evaluated left to right
-    data: Vec<Box<dyn Expression<'a, T>>>,
+    data: Vec<Box<dyn Expression<T>>>,
     // holds Rcs for each variable in the equation, which are also held by Variables in `data`
     variables: HashMap<String, Rc<Cell<T>>>,
     // indicates return type of this equation
     phantom: PhantomData<T>,
 }
 
-impl<'a, T: NumericType> Equation<'a, T> {
+impl<T: NumericType> Equation<T> {
     pub fn evaluate(&self, variables: VariableValues<T>) -> Value<T> {
         if self.data.is_empty() {
-            return_error!(ErrorType::InvalidObject, "Equation is empty");
+            return_error!(ErrorType::InvalidObject, "Equation is empty".to_string());
         }
         for &(label, value) in variables.iter() {
             self.set_variable(label, value)?;
@@ -45,7 +45,7 @@ impl<'a, T: NumericType> Equation<'a, T> {
                 return Ok(value_cell.get());
             },
             None => {
-                return_error!(ErrorType::NoSuchVariable, "Equation does not contain a variable with that label");
+                return_error!(ErrorType::NoSuchVariable, "Equation does not contain a variable with that label".to_string());
             }
         }
     }
@@ -59,14 +59,14 @@ impl<'a, T: NumericType> Equation<'a, T> {
         }
     }
 
-    fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<'a, T>>>) -> Value<'a, T> {
+    fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<T>>>) -> Value<T> {
         let expression = match iter.next() {
             Some(expression) => expression,
             None => {
                 // this shouldn't happen as it implies an expression takes a number of arguments that aren't in the data vec
                 return_error!(
                     ErrorType::InvalidObject,
-                    "An unexpected error occured, equation data is internally inconsistent"
+                    "An unexpected error occured, equation data is internally inconsistent".to_string()
                 );
             }
         };
