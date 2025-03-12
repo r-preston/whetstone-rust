@@ -1,13 +1,24 @@
 use std::marker::PhantomData;
 
 use crate::{NumericType, Value};
-
 use super::Expression;
 
+type InnerFunction<T> = fn(&[Value<T>]) -> Value<T>;
+
 pub struct Function<T> {
-    function: Box<dyn Fn(&[Value<T>]) -> Value<T>>,
-    input_count: u32,
+    function: InnerFunction<T>,
+    num_inputs: u32,
     phantom: PhantomData<T>
+}
+
+impl<T: NumericType> Function<T> {
+    pub fn new(function: InnerFunction<T>, num_inputs: u32) -> Function<T> {
+        Function {
+            function,
+            num_inputs,
+            phantom: PhantomData::<T>,
+        }
+    }
 }
 
 impl<T: NumericType> Expression<T> for Function<T> {
@@ -16,6 +27,6 @@ impl<T: NumericType> Expression<T> for Function<T> {
     }
 
     fn num_inputs(&self) -> u32 {
-        self.input_count
+        self.num_inputs
     }
 }

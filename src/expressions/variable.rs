@@ -19,7 +19,7 @@ impl<T> Variable<T> {
 
 impl<T: NumericType> Expression<T> for Variable<T> {
     fn evaluate(&self, values: &[Value<T>]) -> Value<T> {
-        Ok(T::from(0.0).unwrap())
+        Ok(self.value.get())
     }
 
     fn num_inputs(&self) -> u32 {
