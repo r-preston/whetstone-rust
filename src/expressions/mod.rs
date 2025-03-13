@@ -5,7 +5,7 @@ pub mod variable;
 use crate::{NumericType, Value};
 
 pub trait Expression<T: NumericType> {
-    fn evaluate(&self, values: &[Value<T>]) -> Value<T>;
+    fn evaluate(&self, values: &[T]) -> Value<T>;
 
-    fn num_inputs(&self) -> u32;
+    fn num_inputs(&self) -> usize;
 }

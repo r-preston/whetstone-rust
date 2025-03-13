@@ -3,6 +3,7 @@
 
 mod equation;
 mod expressions;
+mod parser;
 
 pub use equation::Equation;
 

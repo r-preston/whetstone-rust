@@ -7,16 +7,6 @@ use std::rc::Rc;
 use crate::expressions::Expression;
 use crate::{return_error, Error, ErrorType, NumericType, Value, VariableValues};
 
-// equation has three components: constant, variable, function.
-// all return Value
-// constant: holds a constant value
-// variable: holds a value set on invocation
-// function: returns a value based on zero or more arguments
-
-// approaches:
-// 1) list of things of type Component that have an evaluate() method that returns a Value
-// 2) separate lists for each type of thing
-
 pub struct Equation<T: NumericType> {
     label: String,
     // holds a list of expressions evaluated left to right
@@ -84,9 +74,9 @@ impl<T: NumericType> Equation<T> {
                 );
             }
         };
-        let mut input_values: Vec<Value<T>> = Vec::new();
+        let mut input_values: Vec<T> = Vec::new();
         for i in 0..expression.num_inputs() {
-            input_values.push(self.evaluate_equation(iter))
+            input_values.push(self.evaluate_equation(iter)?);
         }
         expression.evaluate(input_values.as_slice())
     }
