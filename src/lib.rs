@@ -80,10 +80,12 @@ impl EquationFactory {
             }
         };
 
+        // get label, if specified
         let mut equation = Equation::new(match captures.get(1) {
             Some(label) => label.as_str(),
             None => "f",
         });
+        // get explicit variables, if present
         if captures.get(2).is_some() {
             // split list of variables
             let variables = captures.get(2).unwrap().as_str().split(",");
@@ -95,8 +97,19 @@ impl EquationFactory {
                         format!("Explicit variable '{}' is not valid", trimmed_var)
                     );
                 }
+                equation.add_variable(trimmed_var);
             }
         }
+        // actual equation
+        let expression_string = match captures.get(3) {
+            Some(group) => group.as_str(),
+            None => {
+                return_error!(
+                    ErrorType::InvalidInput,
+                    "Could not parse equation".to_string()
+                );
+            }
+        };
 
         Ok(equation)
     }

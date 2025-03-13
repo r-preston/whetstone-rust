@@ -28,6 +28,15 @@ pub struct Equation<T: NumericType> {
 }
 
 impl<T: NumericType> Equation<T> {
+    pub(crate) fn new(label: &str) -> Equation<T> {
+        Equation {
+            label: label.to_string(),
+            data: Vec::new(),
+            variables: HashMap::new(),
+            phantom: PhantomData,
+        }
+    }
+
     pub fn evaluate(&self, variables: VariableValues<T>) -> Value<T> {
         if self.data.is_empty() {
             return_error!(ErrorType::NotInitialised, "Equation is empty".to_string());
@@ -36,6 +45,11 @@ impl<T: NumericType> Equation<T> {
             self.set_variable(label, value)?;
         }
         self.evaluate_equation(&mut self.data.iter())
+    }
+
+    pub fn add_variable(&mut self, label: &str) {
+        self.variables
+            .insert(label.to_string(), Rc::new(Cell::new(T::from(0.0).unwrap())));
     }
 
     pub fn set_variable(&self, label: &str, value: T) -> Value<T> {
@@ -53,13 +67,9 @@ impl<T: NumericType> Equation<T> {
         }
     }
 
-    pub(crate) fn new(label: &str) -> Equation<T> {
-        Equation {
-            label: label.to_string(),
-            data: Vec::new(),
-            variables: HashMap::new(),
-            phantom: PhantomData,
-        }
+    pub fn label(&self) -> String {
+        let vars: Vec<String> = self.variables.keys().cloned().collect();
+        return format!("{}({})", self.label, vars.join(","));
     }
 
     fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<T>>>) -> Value<T> {
