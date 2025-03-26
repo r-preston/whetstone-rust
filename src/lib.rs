@@ -37,10 +37,6 @@ macro_rules! return_error {
 }
 pub(crate) use return_error;
 
-// input and return types from an Equation
-pub type VariableValues<'a, T> = &'a [(&'a str, T)];
-type Value<T> = Result<T, Error>;
-
 pub enum Syntax {
     Standard,
 }

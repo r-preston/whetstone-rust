@@ -1,4 +1,4 @@
-use crate::{NumericType, Value};
+use crate::{equation::Value, NumericType};
 
 pub fn add<T: NumericType>(args: &[T]) -> Value<T> {
     Ok(args[0] + args[1])

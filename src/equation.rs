@@ -5,7 +5,11 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 
 use crate::expressions::Expression;
-use crate::{return_error, Error, ErrorType, NumericType, Value, VariableValues};
+use crate::{return_error, Error, ErrorType, NumericType};
+
+// input and return types from an Equation
+pub type VariableValues<'a, T> = &'a [(&'a str, T)];
+pub type Value<T> = Result<T, Error>;
 
 pub struct Equation<T: NumericType> {
     label: String,

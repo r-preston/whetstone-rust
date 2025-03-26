@@ -2,7 +2,7 @@ pub mod constant;
 pub mod function;
 pub mod variable;
 
-use crate::{NumericType, Value};
+use crate::{equation::Value, NumericType};
 
 pub trait Expression<T: NumericType> {
     fn evaluate(&self, values: &[T]) -> Value<T>;

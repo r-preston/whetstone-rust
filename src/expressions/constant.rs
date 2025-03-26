@@ -1,5 +1,5 @@
 use super::Expression;
-use crate::{NumericType, Value};
+use crate::{equation::Value, NumericType};
 
 pub struct Constant<T: NumericType> {
     value: T,

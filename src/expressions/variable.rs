@@ -3,7 +3,7 @@ use std::{cell::Cell, rc::Rc};
 use regex::Regex;
 
 use super::Expression;
-use crate::{NumericType, Value};
+use crate::{equation::Value, NumericType};
 
 pub fn validate_label(label: &str) -> bool {
     let invalid_chars = Regex::new(r"[\s()%^*/><+=-]").unwrap();

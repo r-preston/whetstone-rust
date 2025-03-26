@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use super::Expression;
-use crate::{return_error, Error, ErrorType, NumericType, Value};
+use crate::{equation::Value, return_error, Error, ErrorType, NumericType};
 
 type InnerFunction<T> = fn(&[T]) -> Value<T>;
 
