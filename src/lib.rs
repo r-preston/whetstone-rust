@@ -18,6 +18,8 @@ impl<T: num_traits::float::Float> NumericType for T {}
 
 #[derive(Debug)]
 pub enum ErrorType {
+    FileNotFound,
+    FileReadError,
     SyntaxError,
     InvalidInput,
     NotInitialised,
@@ -39,13 +41,13 @@ macro_rules! return_error {
 }
 pub(crate) use return_error;
 
-pub struct EquationFactory {
+pub struct EquationFactory<T: NumericType> {
     syntax: Syntax,
-    syntax_rules: Ruleset,
+    syntax_rules: Ruleset<T>
 }
 
-impl EquationFactory {
-    pub fn new(syntax: Syntax) -> Result<EquationFactory, Error> {
+impl<T: NumericType> EquationFactory<T> {
+    pub fn new(syntax: Syntax) -> Result<EquationFactory<T>, Error> {
         let rule_file: &str = match syntax {
             Syntax::Custom(ref file) => file,
             ref builtin => match get_builtin_ruleset(&builtin) {
@@ -59,15 +61,15 @@ impl EquationFactory {
             },
         };
         match load_ruleset(&rule_file) {
-            Ok(syntax_rules) => Ok(EquationFactory {
+            Ok(syntax_rules) => Ok(EquationFactory::<T> {
                 syntax,
-                syntax_rules,
+                syntax_rules
             }),
             Err(message) => Err(message),
         }
     }
 
-    pub fn parse<T: NumericType>(&self, equation_string: &str) -> Result<Equation<T>, Error> {
+    pub fn parse(&self, equation_string: &str) -> Result<Equation<T>, Error> {
         /*
          * equations can have the following forms:
          * <expression>
