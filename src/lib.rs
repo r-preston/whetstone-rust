@@ -6,6 +6,8 @@ mod expressions;
 mod parser;
 
 pub use equation::Equation;
+pub use parser::rulesets::Syntax;
+use parser::rulesets::{get_builtin_ruleset, load_ruleset, Ruleset};
 
 use expressions::variable::validate_label;
 use regex::Regex;
@@ -37,17 +39,32 @@ macro_rules! return_error {
 }
 pub(crate) use return_error;
 
-pub enum Syntax {
-    Standard,
-}
-
 pub struct EquationFactory {
     syntax: Syntax,
+    syntax_rules: Ruleset,
 }
 
 impl EquationFactory {
-    pub fn new(syntax: Syntax) -> EquationFactory {
-        EquationFactory { syntax }
+    pub fn new(syntax: Syntax) -> Result<EquationFactory, Error> {
+        let rule_file: &str = match syntax {
+            Syntax::Custom(ref file) => file,
+            ref builtin => match get_builtin_ruleset(&builtin) {
+                Some(ruleset) => ruleset,
+                None => {
+                    return_error!(
+                        ErrorType::InternalError,
+                        "Syntax does not have any built-in rules registered".to_string()
+                    );
+                }
+            },
+        };
+        match load_ruleset(&rule_file) {
+            Ok(syntax_rules) => Ok(EquationFactory {
+                syntax,
+                syntax_rules,
+            }),
+            Err(message) => Err(message),
+        }
     }
 
     pub fn parse<T: NumericType>(&self, equation_string: &str) -> Result<Equation<T>, Error> {

@@ -5,7 +5,7 @@ extern crate whetstone;
 use whetstone::{EquationFactory, Syntax};
 
 fn main() {
-    let factory = EquationFactory::new(Syntax::Standard);
+    let factory = EquationFactory::new(Syntax::Standard).unwrap();
     let equation = factory.parse::<f32>("x").unwrap();
     let equation2 = factory.parse::<f32>("f(x) = x").unwrap();
     let equation3 = factory.parse::<f32>("f = x").unwrap();
