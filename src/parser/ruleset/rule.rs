@@ -1,4 +1,5 @@
 use crate::{
+    equation::Value,
     error::{return_error, Error, ErrorType},
     expressions::{constant::Constant, function::Function, variable::Variable, Expression},
     NumericType,
@@ -19,9 +20,9 @@ pub enum RuleCategory {
     /// placeholder for a value that can be changed for each evaluation
     Variable,
     /// opening parenthesis
-    LeftBracket,
+    OpenBracket,
     /// closing parenthesis
-    RightBracket,
+    CloseBracket,
     /// tokens that are required by the syntax but have no direct affect, for example the separator between function arguments
     Invisible,
 }
@@ -34,8 +35,8 @@ impl fmt::Display for RuleCategory {
             Self::Literal => write!(f, "Literal"),
             Self::Constant => write!(f, "Constant"),
             Self::Variable => write!(f, "Variable"),
-            Self::LeftBracket => write!(f, "LeftBracket"),
-            Self::RightBracket => write!(f, "RightBracket"),
+            Self::OpenBracket => write!(f, "OpenBracket"),
+            Self::CloseBracket => write!(f, "CloseBracket"),
             Self::Invisible => write!(f, "Invisible"),
         }
     }
@@ -55,28 +56,51 @@ pub struct Rule<T: NumericType> {
 }
 
 impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
-    /*
-    fn new_non_expression_rule(pattern: String, priority: u32, category: RuleCategory) -> Rule<T> {}
+    fn new_non_expression_rule(
+        pattern: String,
+        precedence: u32,
+        category: RuleCategory,
+    ) -> Rule<T> {
+        Rule {
+            pattern,
+            precedence,
+            category,
+            binding: None,
+        }
+    }
 
     fn new_function_rule(
         pattern: String,
         priority: u32,
         associativity: Associativity,
-        binding: &dyn Fn(&[T]) -> Value<T>,
+        binding: fn(&[T]) -> Value<T>,
+        num_arguments: usize,
     ) -> Rule<T> {
+        Rule {
+            pattern,
+            precedence: 0, // ?
+            category: RuleCategory::Literal,
+            binding: (Some((Function::new(binding, num_arguments), associativity))),
+        }
     }
 
-    fn new_constant_rule() -> Rule<T> {}
+    fn new_literal_rule(pattern: String) -> Rule<T> {
+        Rule {
+            pattern,
+            precedence: 0, // ?
+            category: RuleCategory::Literal,
+            binding: None,
+        }
+    }
 
     fn new_variable_rule(pattern: String) -> Rule<T> {
         Rule {
             pattern,
-            precedence: 0,
+            precedence: 0, // ?
             category: RuleCategory::Variable,
             binding: None,
         }
     }
-    */
 
     fn expression(&self, token: &str) -> Result<Box<dyn Expression<ExprType = T>>, Error> {
         match self.category {
