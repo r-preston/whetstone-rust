@@ -2,10 +2,10 @@
 
 extern crate whetstone;
 
-use whetstone::{EquationFactory, Syntax};
+use whetstone::{Parser, Syntax};
 
 fn main() {
-    let factory = EquationFactory::<f32>::new(Syntax::Standard).unwrap();
+    let factory = Parser::<f32>::new(Syntax::Standard).unwrap();
     let equation = factory.parse("x").unwrap();
     let equation2 = factory.parse("f(x) = x").unwrap();
     let equation3 = factory.parse("f = x").unwrap();

@@ -2,14 +2,12 @@ pub mod constant;
 pub mod function;
 pub mod variable;
 
-use crate::{equation::Value, parser::rulesets::RuleType, NumericType};
+use crate::equation::Value;
 
-pub struct Generator {
-    expression_type: RuleType
-}
+pub trait Expression {
+    type ExprType;
 
-pub trait Expression<T: NumericType> {
-    fn evaluate(&self, values: &[T]) -> Value<T>;
+    fn evaluate(&self, values: &[Self::ExprType]) -> Value<Self::ExprType>;
 
     fn num_inputs(&self) -> usize;
 }

@@ -5,7 +5,10 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 
 use crate::expressions::Expression;
-use crate::{return_error, Error, ErrorType, NumericType};
+use crate::{
+    error::{return_error, Error, ErrorType},
+    NumericType,
+};
 
 // input and return types from an Equation
 pub type VariableValues<'a, T> = &'a [(&'a str, T)];
@@ -14,7 +17,7 @@ pub type Value<T> = Result<T, Error>;
 pub struct Equation<T: NumericType> {
     label: String,
     // holds a list of expressions evaluated left to right
-    data: Vec<Box<dyn Expression<T>>>,
+    data: Vec<Box<dyn Expression<ExprType = T>>>,
     // holds Rcs for each variable in the equation, which are also held by Variables in `data`
     variables: HashMap<String, Rc<Cell<T>>>,
     // indicates return type of this equation
@@ -66,7 +69,7 @@ impl<T: NumericType> Equation<T> {
         return format!("{}({})", self.label, vars.join(","));
     }
 
-    fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<T>>>) -> Value<T> {
+    fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<ExprType = T>>>) -> Value<T> {
         let expression = match iter.next() {
             Some(expression) => expression,
             None => {

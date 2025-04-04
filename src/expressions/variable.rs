@@ -10,21 +10,23 @@ pub fn validate_label(label: &str) -> bool {
     !(label.is_empty() && invalid_chars.is_match(label))
 }
 
-pub struct Variable<T> {
+pub struct Variable<T: NumericType> {
     label: String,
     value: Rc<Cell<T>>,
 }
 
-impl<T> Variable<T> {
-    pub fn new(label: &str, value: Rc<Cell<T>>) -> Variable<T> {
+impl<T: NumericType> Variable<T> {
+    pub fn new(label: &str, initial_value: T) -> Variable<T> {
         Variable {
             label: label.to_string(),
-            value,
+            value: Rc::new(Cell::new(initial_value)),
         }
     }
 }
 
-impl<T: NumericType> Expression<T> for Variable<T> {
+impl<T: NumericType> Expression for Variable<T> {
+    type ExprType = T;
+
     fn evaluate(&self, values: &[T]) -> Value<T> {
         Ok(self.value.get())
     }

@@ -1,7 +1,11 @@
 use std::marker::PhantomData;
 
 use super::Expression;
-use crate::{equation::Value, return_error, Error, ErrorType, NumericType};
+use crate::{
+    equation::Value,
+    error::{return_error, Error, ErrorType},
+    NumericType,
+};
 
 type InnerFunction<T> = fn(&[T]) -> Value<T>;
 
@@ -9,6 +13,12 @@ pub struct Function<T> {
     function: InnerFunction<T>,
     num_inputs: usize,
     phantom: PhantomData<T>,
+}
+
+impl<T: NumericType> Clone for Function<T> {
+    fn clone(&self) -> Self {
+        Function::<T>::new(self.function, self.num_inputs)
+    }
 }
 
 impl<T: NumericType> Function<T> {
@@ -21,7 +31,9 @@ impl<T: NumericType> Function<T> {
     }
 }
 
-impl<T: NumericType> Expression<T> for Function<T> {
+impl<T: NumericType> Expression for Function<T> {
+    type ExprType = T;
+
     fn evaluate(&self, values: &[T]) -> Value<T> {
         if values.len() != self.num_inputs {
             return_error!(
