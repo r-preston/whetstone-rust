@@ -24,7 +24,7 @@ pub enum RuleCategory {
     /// closing parenthesis
     CloseBracket,
     /// tokens that are required by the syntax but have no direct affect, for example the separator between function arguments
-    Invisible,
+    Separator,
 }
 
 impl fmt::Display for RuleCategory {
@@ -37,7 +37,7 @@ impl fmt::Display for RuleCategory {
             Self::Variable => write!(f, "Variable"),
             Self::OpenBracket => write!(f, "OpenBracket"),
             Self::CloseBracket => write!(f, "CloseBracket"),
-            Self::Invisible => write!(f, "Invisible"),
+            Self::Separator => write!(f, "Separator"),
         }
     }
 }
@@ -56,14 +56,10 @@ pub struct Rule<T: NumericType> {
 }
 
 impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
-    fn new_non_expression_rule(
-        pattern: String,
-        precedence: u32,
-        category: RuleCategory,
-    ) -> Rule<T> {
+    fn new_non_expression_rule(pattern: String, category: RuleCategory) -> Rule<T> {
         Rule {
             pattern,
-            precedence,
+            precedence: 0,
             category,
             binding: None,
         }
@@ -71,15 +67,16 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
 
     fn new_function_rule(
         pattern: String,
-        priority: u32,
+        precedence: u32,
+        category: RuleCategory,
         associativity: Associativity,
         binding: fn(&[T]) -> Value<T>,
         num_arguments: usize,
     ) -> Rule<T> {
         Rule {
             pattern,
-            precedence: 0, // ?
-            category: RuleCategory::Literal,
+            precedence,
+            category,
             binding: (Some((Function::new(binding, num_arguments), associativity))),
         }
     }
@@ -87,7 +84,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
     fn new_literal_rule(pattern: String) -> Rule<T> {
         Rule {
             pattern,
-            precedence: 0, // ?
+            precedence: 0,
             category: RuleCategory::Literal,
             binding: None,
         }
@@ -96,7 +93,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
     fn new_variable_rule(pattern: String) -> Rule<T> {
         Rule {
             pattern,
-            precedence: 0, // ?
+            precedence: 0,
             category: RuleCategory::Variable,
             binding: None,
         }

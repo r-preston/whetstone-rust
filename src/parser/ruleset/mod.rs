@@ -37,12 +37,35 @@ impl<T: NumericType> Ruleset<T> {
                 return_error!(ErrorType::FileNotFound, msg.to_string());
             }
         };
-        let json_rules: serde_json::Value = match serde_json::from_str(&json_string) {
-            Ok(json) => json,
+        let json_rules = match serde_json::from_str(&json_string) {
+            Ok(json) => match json {
+                serde_json::Value::Array(json_array) => json_array,
+                _ => {
+                    return_error!(
+                        ErrorType::FileReadError,
+                        format!("Syntax file should be a list of rule objects")
+                    );
+                }
+            },
             Err(msg) => {
                 return_error!(ErrorType::FileReadError, msg.to_string());
             }
         };
-        return Ok(Ruleset { rules: Vec::new() });
+
+        let rules = Ruleset { rules: Vec::new() };
+
+        for json_rule in json_rules {
+            match json_rule {
+                serde_json::Value::Object(rule) => {}
+                _ => {
+                    return_error!(
+                        ErrorType::FileReadError,
+                        format!("Syntax file should be a list of rule objects")
+                    );
+                }
+            }
+        }
+
+        return Ok(rules);
     }
 }
