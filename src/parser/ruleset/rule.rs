@@ -8,6 +8,7 @@ use crate::{
 use std::fmt;
 
 /// The type of expression a Rule represents
+#[derive(PartialEq, Clone, Eq, Hash)]
 pub enum RuleCategory {
     /// an operation on two values, e.g. +, *, ^
     Operator,
@@ -25,6 +26,47 @@ pub enum RuleCategory {
     CloseBracket,
     /// tokens that are required by the syntax but have no direct affect, for example the separator between function arguments
     Separator,
+}
+
+impl RuleCategory {
+    fn string_representations() -> &'static [(RuleCategory, &'static str)] {
+        &[
+            (Self::Operator, "Operator"),
+            (Self::Function, "Function"),
+            (Self::Literal, "Literal"),
+            (Self::Constant, "Constant"),
+            (Self::Variable, "Variable"),
+            (Self::OpenBracket, "OpenBracket"),
+            (Self::CloseBracket, "CloseBracket"),
+            (Self::Separator, "Separator"),
+        ]
+    }
+
+    pub fn to_string(category: RuleCategory) -> Result<&'static str, Error> {
+        match Self::string_representations()
+            .iter()
+            .find(|x| x.0 == category)
+        {
+            Some(val) => Ok(val.1),
+            None => return_error!(
+                ErrorType::InternalError,
+                "No string respresentation available for enum value".to_string()
+            ),
+        }
+    }
+
+    pub fn from_string(string_val: &str) -> Result<RuleCategory, Error> {
+        match Self::string_representations()
+            .iter()
+            .find(|x| x.1 == string_val)
+        {
+            Some(val) => Ok(val.0.clone()),
+            None => return_error!(
+                ErrorType::InternalError,
+                format!("No match for string '{}'", string_val)
+            ),
+        }
+    }
 }
 
 impl fmt::Display for RuleCategory {

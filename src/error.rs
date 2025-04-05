@@ -5,6 +5,8 @@ pub enum ErrorType {
     /// Syntax file exists but could not be read or has invalid contents
     FileReadError,
     /// Equation string is improperly formatted and could not be parsed
+    SyntaxFileError,
+    /// Equation string is improperly formatted and could not be parsed
     ParseError,
     /// Attempt to evaluate an uninitialised function
     NotInitialised,
@@ -23,7 +25,7 @@ macro_rules! return_error {
         return Err(Error {
             error_type: $error_type,
             message: $message,
-        });
+        })
     };
 }
 pub(crate) use return_error;
