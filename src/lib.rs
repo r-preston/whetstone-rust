@@ -16,8 +16,8 @@ pub use parser::{Parser, Syntax};
  */
 pub use equation::{Equation, Value};
 
-pub use error::{Error, ErrorType};
 pub use crate::parser::ruleset::bindings;
+pub use error::{Error, ErrorType};
 
 // define constraint for the type of value used by an Equation
 pub trait NumericType: num_traits::float::Float + BuiltinBindings {}

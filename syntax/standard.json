@@ -1,41 +1,19 @@
 [
     {
-        "pattern": "+",
-        "category": "Operator",
-        "label": "Add",
-        "precedence": 3,
-        "associativity": "LeftToRight"
-    },
-    {
-        "pattern": "-",
-        "category": "Function",
-        "label": "Negate",
-        "precedence": 4,
-        "argument_count": 1
-    },
-    {
-        "pattern": "[0-9]",
-        "category": "Literal"
-    },
-    {
-        "pattern": "pi",
-        "category": "Constant",
-        "label": "Pi"
-    },
-    {
-        "pattern": "[\\s()%^*/><+=-]+",
-        "category": "Variable"
-    },
-    {
-        "pattern": "[(]",
-        "category": "OpenBracket"
-    },
-    {
-        "pattern": "[)]",
-        "category": "CloseBracket"
-    },
-    {
-        "pattern": ",",
-        "category": "Separator"
+    "category": "Operator",
+    "precedence": 3,
+    "follows": [],
+    "precedes": [],
+    "associativity": "LeftToRight",
+    "rules": [
+        {
+            "pattern": "+",
+            "label": "Add",
+            "precedence": 3,
+            "follows": [],
+            "precedes": [],
+            "associativity": "LeftToRight"
+        }
+    ]
     }
 ]

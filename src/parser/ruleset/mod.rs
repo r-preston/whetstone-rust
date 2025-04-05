@@ -54,7 +54,7 @@ impl<T: NumericType> Ruleset<T> {
             }
         };
 
-        let rules = Ruleset { rules: Vec::new() };
+        let mut rules = Ruleset { rules: Vec::new() };
 
         for json_rule in json_rules {
             match json_rule {

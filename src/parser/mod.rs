@@ -26,10 +26,7 @@ pub struct Parser<T: NumericType> {
 }
 
 impl<T: NumericType<ExprType = T>> Parser<T> {
-    pub fn new(
-        syntax: Syntax,
-        custom_bindings: Option<BindingMap<T>>,
-    ) -> Result<Parser<T>, Error> {
+    pub fn new(syntax: Syntax, custom_bindings: Option<BindingMap<T>>) -> Result<Parser<T>, Error> {
         // get json file containing rule definitions
         let rule_file: &str = match syntax {
             // if user provides custom rules file
@@ -48,7 +45,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
         // generate map of function bindings
         let mut bindings = T::get_bindings();
         match custom_bindings {
-            Some(existing) => {bindings.extend(existing)},
+            Some(existing) => bindings.extend(existing),
             None => (),
         };
         // load and validate rules from file
