@@ -1,4 +1,5 @@
-mod definitions;
+pub mod bindings;
+pub mod definitions;
 mod rule;
 
 use super::Syntax;
@@ -6,6 +7,7 @@ use crate::{
     error::{return_error, Error, ErrorType},
     NumericType,
 };
+use bindings::BindingMap;
 use rule::Rule;
 
 use std::fs;
@@ -30,8 +32,8 @@ pub fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
 }
 
 impl<T: NumericType> Ruleset<T> {
-    pub fn load_ruleset(path: &str) -> Result<Ruleset<T>, Error> {
-        let json_string = match fs::read_to_string(path) {
+    pub fn load_ruleset(path: &str, function_bindings: BindingMap<T>) -> Result<Ruleset<T>, Error> {
+        let json_string: String = match fs::read_to_string(path) {
             Ok(data) => data,
             Err(msg) => {
                 return_error!(ErrorType::FileNotFound, msg.to_string());
@@ -56,7 +58,9 @@ impl<T: NumericType> Ruleset<T> {
 
         for json_rule in json_rules {
             match json_rule {
-                serde_json::Value::Object(rule) => {}
+                serde_json::Value::Object(rule) => {
+                    // good
+                }
                 _ => {
                     return_error!(
                         ErrorType::FileReadError,

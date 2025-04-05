@@ -1,5 +1,6 @@
 pub mod ruleset;
 
+use crate::bindings::BindingMap;
 use crate::equation::Equation;
 use crate::{
     error::{return_error, Error, ErrorType},
@@ -24,8 +25,12 @@ pub struct Parser<T: NumericType> {
     syntax_rules: Ruleset<T>,
 }
 
-impl<T: NumericType> Parser<T> {
-    pub fn new(syntax: Syntax) -> Result<Parser<T>, Error> {
+impl<T: NumericType<ExprType = T>> Parser<T> {
+    pub fn new(
+        syntax: Syntax,
+        custom_bindings: Option<BindingMap<T>>,
+    ) -> Result<Parser<T>, Error> {
+        // get json file containing rule definitions
         let rule_file: &str = match syntax {
             // if user provides custom rules file
             Syntax::Custom(ref file) => file,
@@ -40,7 +45,14 @@ impl<T: NumericType> Parser<T> {
                 }
             },
         };
-        match Ruleset::load_ruleset(&rule_file) {
+        // generate map of function bindings
+        let mut bindings = T::get_bindings();
+        match custom_bindings {
+            Some(existing) => {bindings.extend(existing)},
+            None => (),
+        };
+        // load and validate rules from file
+        match Ruleset::load_ruleset(&rule_file, bindings) {
             Ok(syntax_rules) => Ok(Parser::<T> {
                 syntax,
                 syntax_rules,

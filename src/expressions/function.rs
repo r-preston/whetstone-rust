@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use super::Expression;
 use crate::{
     equation::Value,
@@ -7,12 +5,11 @@ use crate::{
     NumericType,
 };
 
-type InnerFunction<T> = fn(&[T]) -> Value<T>;
+pub type FunctionPointer<T> = fn(&[T]) -> Value<T>;
 
 pub struct Function<T> {
-    function: InnerFunction<T>,
+    function: FunctionPointer<T>,
     num_inputs: usize,
-    phantom: PhantomData<T>,
 }
 
 impl<T: NumericType> Clone for Function<T> {
@@ -22,11 +19,10 @@ impl<T: NumericType> Clone for Function<T> {
 }
 
 impl<T: NumericType> Function<T> {
-    pub fn new(function: InnerFunction<T>, num_inputs: usize) -> Function<T> {
+    pub fn new(function: FunctionPointer<T>, num_inputs: usize) -> Function<T> {
         Function {
             function,
             num_inputs,
-            phantom: PhantomData::<T>,
         }
     }
 }
