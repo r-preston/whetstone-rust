@@ -5,11 +5,11 @@ use crate::{
     NumericType,
 };
 
-use std::fmt;
+use std::{fmt, marker::PhantomData};
 
 /// The type of expression a Rule represents
 #[derive(PartialEq, Clone, Eq, Hash)]
-pub enum RuleCategory {
+pub enum Category {
     /// an operation on two values, e.g. +, *, ^
     Operator,
     /// a function of 1 or more arguments, e.g. sin, ln
@@ -28,8 +28,8 @@ pub enum RuleCategory {
     Separator,
 }
 
-impl RuleCategory {
-    fn string_representations() -> &'static [(RuleCategory, &'static str)] {
+impl Category {
+    fn string_representations() -> &'static [(Category, &'static str)] {
         &[
             (Self::Operator, "Operator"),
             (Self::Function, "Function"),
@@ -42,7 +42,7 @@ impl RuleCategory {
         ]
     }
 
-    pub fn to_string(category: RuleCategory) -> Result<&'static str, Error> {
+    pub fn to_string(category: Category) -> Result<&'static str, Error> {
         match Self::string_representations()
             .iter()
             .find(|x| x.0 == category)
@@ -55,7 +55,7 @@ impl RuleCategory {
         }
     }
 
-    pub fn from_string(string_val: &str) -> Result<RuleCategory, Error> {
+    pub fn from_string(string_val: &str) -> Result<Category, Error> {
         match Self::string_representations()
             .iter()
             .find(|x| x.1 == string_val)
@@ -69,7 +69,7 @@ impl RuleCategory {
     }
 }
 
-impl fmt::Display for RuleCategory {
+impl fmt::Display for Category {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Operator => write!(f, "Operator"),
@@ -93,24 +93,26 @@ pub enum Associativity {
 pub struct Rule<T: NumericType> {
     pattern: String,
     precedence: u32,
-    category: RuleCategory,
+    category: Category,
     binding: Option<(Function<T>, Associativity)>,
+    phantom: PhantomData<T>
 }
 
 impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
-    fn new_non_expression_rule(pattern: String, category: RuleCategory) -> Rule<T> {
+    pub fn new_non_expression_rule(pattern: String, category: Category) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
             category,
             binding: None,
+            phantom: PhantomData::<T>
         }
     }
 
-    fn new_function_rule(
+    pub fn new_function_rule(
         pattern: String,
         precedence: u32,
-        category: RuleCategory,
+        category: Category,
         associativity: Associativity,
         binding: fn(&[T]) -> Value<T>,
         num_arguments: usize,
@@ -120,40 +122,41 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             precedence,
             category,
             binding: (Some((Function::new(binding, num_arguments), associativity))),
+            phantom: PhantomData::<T>
         }
     }
 
-    fn new_literal_rule(pattern: String) -> Rule<T> {
+    pub fn new_literal_rule(pattern: String) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
-            category: RuleCategory::Literal,
+            category: Category::Literal,
             binding: None,
+            phantom: PhantomData::<T>
         }
     }
 
-    fn new_variable_rule(pattern: String) -> Rule<T> {
+    pub fn new_variable_rule(pattern: String) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
-            category: RuleCategory::Variable,
+            category: Category::Variable,
             binding: None,
+            phantom: PhantomData::<T>
         }
     }
 
     fn expression(&self, token: &str) -> Result<Box<dyn Expression<ExprType = T>>, Error> {
         match self.category {
             // Rules that produce an Expression of type Function
-            RuleCategory::Operator | RuleCategory::Function | RuleCategory::Constant => {
-                match self.binding {
-                    Some(ref bind) => Ok(Box::new(bind.0.clone())),
-                    None => {
-                        return_error!(ErrorType::InternalError, format!("Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category));
-                    }
+            Category::Operator | Category::Function | Category::Constant => match self.binding {
+                Some(ref bind) => Ok(Box::new(bind.0.clone())),
+                None => {
+                    return_error!(ErrorType::InternalError, format!("Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category));
                 }
-            }
+            },
             // Rules that produce an Expression of type Constant
-            RuleCategory::Literal => match token.parse::<T>() {
+            Category::Literal => match token.parse::<T>() {
                 Ok(value) => Ok(Box::new(Constant::new(value))),
                 Err(error) => {
                     return_error!(
@@ -163,7 +166,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
                 }
             },
             // Rules that produce an Expression of type Variable
-            RuleCategory::Variable => Ok(Box::new(Variable::new(
+            Category::Variable => Ok(Box::new(Variable::new(
                 token,
                 <Variable<T> as Expression>::ExprType::from(0.0).unwrap(),
             ))),
