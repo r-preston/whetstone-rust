@@ -42,10 +42,13 @@ pub fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
 
 impl<T: NumericType + 'static> Ruleset<T> {
     pub fn load_ruleset(path: &str, function_bindings: BindingMap<T>) -> Result<Ruleset<T>, Error> {
+        if !fs::exists(path).unwrap_or(false) {
+            return_error!(ErrorType::FileNotFoundError, format!("Could not find '{path}'"));
+        }
         let json_string: String = match fs::read_to_string(path) {
             Ok(data) => data,
             Err(msg) => {
-                return_error!(ErrorType::FileNotFound, msg.to_string());
+                return_error!(ErrorType::FileReadError, msg.to_string());
             }
         };
         let json_categories = match serde_json::from_str(&json_string) {
@@ -53,7 +56,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
                 serde_json::Value::Array(json_array) => json_array,
                 _ => {
                     return_error!(
-                        ErrorType::FileReadError,
+                        ErrorType::RuleJsonError,
                         format!("Syntax file should be a list of rule objects")
                     );
                 }
@@ -84,7 +87,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
                                     Some(n) => n,
                                     _ => {
                                         return_error!(
-                                            ErrorType::SyntaxFileError,
+                                            ErrorType::RuleJsonError,
                                             "Field 'precedence' of category objects is required when category is Function or Operator".to_string()
                                         )
                                     }
@@ -99,7 +102,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
                     let rules_json = match category.get("rules") {
                         Some(serde_json::Value::Array(rules)) => rules,
                         _ => return_error!(
-                            ErrorType::SyntaxFileError,
+                            ErrorType::RuleJsonError,
                             "Category objects must have non-empty array field 'rules'".to_string()
                         ),
                     };
@@ -142,14 +145,14 @@ impl<T: NumericType + 'static> Ruleset<T> {
         let pattern = match rule_object.get("pattern") {
             Some(serde_json::Value::String(ptn)) => ptn,
             _ => return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Rule objects must have non-empty string field 'pattern'".to_string()
             ),
         }
         .to_string();
         if pattern.is_empty() {
             return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Rule objects must have non-empty string field 'pattern'".to_string()
             );
         }
@@ -168,13 +171,13 @@ impl<T: NumericType + 'static> Ruleset<T> {
         );
         if follows.is_empty() {
             return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Rule object has no defined rules for 'follows'".to_string()
             );
         }
         if precedes.is_empty() {
             return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Rule object has no defined rules for 'precedes'".to_string()
             );
         }
@@ -194,7 +197,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
                 let label = match rule_object.get("label") {
                     Some(serde_json::Value::String(s)) => s.as_str(),
                     _ => return_error!(
-                        ErrorType::SyntaxFileError,
+                        ErrorType::RuleJsonError,
                         "Function, Operator and Constant rules require string field 'Label'"
                             .to_string()
                     ),
@@ -202,7 +205,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
                 let binding = match function_bindings.get(label) {
                     Some(f) => f,
                     _ => return_error!(
-                        ErrorType::SyntaxFileError,
+                        ErrorType::RuleJsonError,
                         format!("No binding found for label '{}'", label)
                     ),
                 };
@@ -232,7 +235,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
         let category_str = match json_object.get("category") {
             Some(serde_json::Value::String(category_name)) => category_name,
             _ => return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Category objects must have string field 'category'".to_string()
             ),
         };
@@ -240,14 +243,14 @@ impl<T: NumericType + 'static> Ruleset<T> {
             Ok(category_enum) => category_enum,
             Err(_) => {
                 return_error!(
-                    ErrorType::SyntaxFileError,
+                    ErrorType::RuleJsonError,
                     format!("Value '{}' for field 'category' is not valid", category_str)
                 )
             }
         };
         match used_categories.insert(category_enum.clone()) {
             false => return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Field 'category' of category objects must be unique".to_string()
             ),
             true => Ok(category_enum),
@@ -265,7 +268,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
         let default_values = match json_object.get(field_label) {
             Some(serde_json::Value::Array(json_vec)) => json_vec,
             Some(_) => return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 format!("Field '{}' must be an array of category names", field_label)
             ),
             None => {
@@ -278,7 +281,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
                 Some(category_str) => match Category::from_string(category_str) {
                     Ok(category_enum) => context_array.push(category_enum),
                     Err(_) => return_error!(
-                        ErrorType::SyntaxFileError,
+                        ErrorType::RuleJsonError,
                         format!(
                             "Value '{}' in array '{}' is not a valid category",
                             category_str, field_label
@@ -286,7 +289,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
                     ),
                 },
                 None => return_error!(
-                    ErrorType::SyntaxFileError,
+                    ErrorType::RuleJsonError,
                     format!("Values in array '{}' must be strings", field_label)
                 ),
             }
@@ -304,13 +307,13 @@ impl<T: NumericType + 'static> Ruleset<T> {
                 match precedence.as_u64().unwrap_or(u64::MAX).to_u32() {
                     Some(n) => Ok(Some(n)),
                     None => return_error!(
-                        ErrorType::SyntaxFileError,
+                        ErrorType::RuleJsonError,
                         "Field 'precedence' is not a valid 32 bit unsigned integer".to_string()
                     ),
                 }
             }
             Some(_) => return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Field 'precedence' is not a valid 32 bit unsigned integer".to_string()
             ),
             None => Ok(None),
@@ -326,13 +329,13 @@ impl<T: NumericType + 'static> Ruleset<T> {
                 "LeftToRight" => Ok(Associativity::LeftToRight),
                 "RightToLeft" => Ok(Associativity::RightToLeft),
                 _ => return_error!(
-                    ErrorType::SyntaxFileError,
+                    ErrorType::RuleJsonError,
                     "Field 'associativity' must be either \"LeftToRight\" or \"RightToLeft\""
                         .to_string()
                 ),
             },
             Some(_) => return_error!(
-                ErrorType::SyntaxFileError,
+                ErrorType::RuleJsonError,
                 "Field 'associativity' must be either \"LeftToRight\" or \"RightToLeft\""
                     .to_string()
             ),

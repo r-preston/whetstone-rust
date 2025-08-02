@@ -1,17 +1,17 @@
 #[derive(Debug)]
 pub enum ErrorType {
     /// Provided syntax file does not exist
-    FileNotFound,
-    /// Syntax file exists but could not be read or has invalid contents
+    FileNotFoundError,
+    /// Provided syntax file could not be read
     FileReadError,
+    /// Syntax file is improperly formatted and could not be parsed, with line number
+    RuleJsonError,
     /// Equation string is improperly formatted and could not be parsed
-    SyntaxFileError,
-    /// Equation string is improperly formatted and could not be parsed
-    ParseError,
+    SyntaxError,
     /// Attempt to evaluate an uninitialised function
-    NotInitialised,
+    NotInitialisedError,
     /// Tried to set value of a variable that doesn't exist
-    NoSuchVariable,
+    NoSuchVariableError,
     /// Internal logic error
     InternalError,
 }

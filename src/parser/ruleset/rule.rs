@@ -186,7 +186,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
                 Ok(value) => Ok(Box::new(Constant::new(value))),
                 Err(_) => {
                     return_error!(
-                        ErrorType::ParseError,
+                        ErrorType::SyntaxError,
                         format!("Could not parse literal '{}' as a number", token)
                     );
                 }

@@ -2,6 +2,7 @@ pub mod ruleset;
 
 use crate::bindings::BindingMap;
 use crate::equation::Equation;
+use crate::expressions::Expression;
 use crate::{
     error::{return_error, Error, ErrorType},
     NumericType,
@@ -70,7 +71,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
          */
         if equation_string.is_empty() {
             return_error!(
-                ErrorType::ParseError,
+                ErrorType::SyntaxError,
                 "Equation string should not be empty".to_string()
             );
         }
@@ -79,7 +80,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
             Some(captures) => captures,
             None => {
                 return_error!(
-                    ErrorType::ParseError,
+                    ErrorType::SyntaxError,
                     "Could not parse equation".to_string()
                 );
             }
@@ -98,7 +99,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                 let trimmed_var = variable.trim();
                 if !validate_label(trimmed_var) {
                     return_error!(
-                        ErrorType::ParseError,
+                        ErrorType::SyntaxError,
                         format!("Explicit variable '{}' is not valid", trimmed_var)
                     );
                 }
@@ -106,16 +107,30 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
             }
         }
         // actual equation
-        let _expression_string = match captures.get(3) {
+        let expression_string = match captures.get(3) {
             Some(group) => group.as_str(),
             None => {
                 return_error!(
-                    ErrorType::ParseError,
+                    ErrorType::SyntaxError,
                     "Could not parse equation".to_string()
                 );
             }
         };
 
+        equation.set_data(self.parse_equation(expression_string)?);
+        
         Ok(equation)
+    }
+
+    fn parse_equation(&self, equation_string: &str) -> Result<Vec<Box<dyn Expression<ExprType = T>>>, Error> {
+        if equation_string.is_empty() {
+            return_error!(ErrorType::SyntaxError, "Equation is empty".to_string());
+        }
+
+        let expressions = Vec::new();
+
+
+
+        Ok(expressions)
     }
 }

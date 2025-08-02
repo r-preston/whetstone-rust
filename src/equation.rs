@@ -36,7 +36,7 @@ impl<T: NumericType> Equation<T> {
 
     pub fn evaluate(&self, variables: VariableValues<T>) -> Value<T> {
         if self.data.is_empty() {
-            return_error!(ErrorType::NotInitialised, "Equation is empty".to_string());
+            return_error!(ErrorType::NotInitialisedError, "Equation is empty".to_string());
         }
         for &(label, value) in variables.iter() {
             self.set_variable(label, value)?;
@@ -44,7 +44,7 @@ impl<T: NumericType> Equation<T> {
         self.evaluate_equation(&mut self.data.iter())
     }
 
-    pub fn add_variable(&mut self, label: &str) {
+    pub(crate) fn add_variable(&mut self, label: &str) {
         self.variables
             .insert(label.to_string(), Rc::new(Cell::new(T::from(0.0).unwrap())));
     }
@@ -57,16 +57,20 @@ impl<T: NumericType> Equation<T> {
             }
             None => {
                 return_error!(
-                    ErrorType::NoSuchVariable,
+                    ErrorType::NoSuchVariableError,
                     "Equation does not contain a variable with that label".to_string()
                 );
             }
         }
     }
 
-    pub fn label(&self) -> String {
+    pub(crate) fn label(&self) -> String {
         let vars: Vec<String> = self.variables.keys().cloned().collect();
         return format!("{}({})", self.label, vars.join(","));
+    }
+
+    pub(crate) fn set_data(&mut self, data: Vec<Box<dyn Expression<ExprType = T>>>) {
+        self.data = data;
     }
 
     fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<ExprType = T>>>) -> Value<T> {
