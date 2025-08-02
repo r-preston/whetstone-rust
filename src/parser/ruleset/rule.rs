@@ -85,6 +85,7 @@ impl fmt::Display for Category {
 }
 
 /// The order in which operations with equal precedence should be resolved
+#[derive(Copy, Clone)]
 pub enum Associativity {
     LeftToRight,
     RightToLeft,
@@ -95,17 +96,26 @@ pub struct Rule<T: NumericType> {
     precedence: u32,
     category: Category,
     binding: Option<(Function<T>, Associativity)>,
-    phantom: PhantomData<T>
+    phantom: PhantomData<T>,
+    follows: Vec<Category>,
+    precedes: Vec<Category>,
 }
 
 impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
-    pub fn new_non_expression_rule(pattern: String, category: Category) -> Rule<T> {
+    pub fn new_non_expression_rule(
+        pattern: String,
+        category: Category,
+        follows: Vec<Category>,
+        precedes: Vec<Category>,
+    ) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
             category,
             binding: None,
-            phantom: PhantomData::<T>
+            follows,
+            precedes,
+            phantom: PhantomData::<T>,
         }
     }
 
@@ -115,6 +125,8 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         category: Category,
         associativity: Associativity,
         binding: fn(&[T]) -> Value<T>,
+        follows: Vec<Category>,
+        precedes: Vec<Category>,
         num_arguments: usize,
     ) -> Rule<T> {
         Rule {
@@ -122,27 +134,41 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             precedence,
             category,
             binding: (Some((Function::new(binding, num_arguments), associativity))),
-            phantom: PhantomData::<T>
+            follows,
+            precedes,
+            phantom: PhantomData::<T>,
         }
     }
 
-    pub fn new_literal_rule(pattern: String) -> Rule<T> {
+    pub fn new_literal_rule(
+        pattern: String,
+        follows: Vec<Category>,
+        precedes: Vec<Category>,
+    ) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
             category: Category::Literal,
             binding: None,
-            phantom: PhantomData::<T>
+            follows,
+            precedes,
+            phantom: PhantomData::<T>,
         }
     }
 
-    pub fn new_variable_rule(pattern: String) -> Rule<T> {
+    pub fn new_variable_rule(
+        pattern: String,
+        follows: Vec<Category>,
+        precedes: Vec<Category>,
+    ) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
             category: Category::Variable,
             binding: None,
-            phantom: PhantomData::<T>
+            follows,
+            precedes,
+            phantom: PhantomData::<T>,
         }
     }
 
@@ -158,7 +184,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             // Rules that produce an Expression of type Constant
             Category::Literal => match token.parse::<T>() {
                 Ok(value) => Ok(Box::new(Constant::new(value))),
-                Err(error) => {
+                Err(_) => {
                     return_error!(
                         ErrorType::ParseError,
                         format!("Could not parse literal '{}' as a number", token)

@@ -18,11 +18,11 @@ pub struct Ruleset<T: NumericType> {
 }
 
 struct RuleCategory {
-    pub category_enum: Category,
-    pub default_associativity: Associativity,
-    pub default_precedence: u32,
-    pub default_follows: Vec<Category>,
-    pub default_precedes: Vec<Category>,
+    category_enum: Category,
+    default_associativity: Associativity,
+    default_precedence: u32,
+    default_follows: Option<Vec<Category>>,
+    default_precedes: Option<Vec<Category>>,
 }
 
 fn builtin_rulesets() -> &'static [(Syntax, &'static str)] {
@@ -40,7 +40,7 @@ pub fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
     }
 }
 
-impl<T: NumericType> Ruleset<T> {
+impl<T: NumericType + 'static> Ruleset<T> {
     pub fn load_ruleset(path: &str, function_bindings: BindingMap<T>) -> Result<Ruleset<T>, Error> {
         let json_string: String = match fs::read_to_string(path) {
             Ok(data) => data,
@@ -78,11 +78,20 @@ impl<T: NumericType> Ruleset<T> {
                             &category,
                             Associativity::LeftToRight,
                         )?,
-                        default_precedence: Self::parse_precedence_field(
-                            &category,
-                            &category_enum,
-                            0,
-                        )?,
+                        default_precedence: match category_enum {
+                            Category::Operator | Category::Function => {
+                                match Self::parse_precedence_field(&category)? {
+                                    Some(n) => n,
+                                    _ => {
+                                        return_error!(
+                                            ErrorType::SyntaxFileError,
+                                            "Field 'precedence' of category objects is required when category is Function or Operator".to_string()
+                                        )
+                                    }
+                                }
+                            }
+                            _ => 0,
+                        },
                         default_follows: Self::parse_category_array_field(&category, "follows")?,
                         default_precedes: Self::parse_category_array_field(&category, "precedes")?,
                     };
@@ -96,7 +105,11 @@ impl<T: NumericType> Ruleset<T> {
                     };
 
                     for rule in rules_json {
-                        rules.rules.push(Box::new(Self::parse_rule(rule, &rule_category)?));
+                        rules.rules.push(Box::new(Self::parse_rule(
+                            rule,
+                            &rule_category,
+                            &function_bindings,
+                        )?));
                     }
                 }
                 _ => {
@@ -112,9 +125,104 @@ impl<T: NumericType> Ruleset<T> {
     }
 
     fn parse_rule(
-        rule_json: &serde_json::Value, category_defaults: &RuleCategory) -> Result<Rule<T>, Error> {
-            return_error!(ErrorType::SyntaxFileError, "Not implemeted".to_string())
+        rule_json: &serde_json::Value,
+        category_defaults: &RuleCategory,
+        function_bindings: &BindingMap<T>,
+    ) -> Result<Rule<T>, Error> {
+        let rule_object = match rule_json {
+            serde_json::Value::Object(obj) => obj,
+            _ => {
+                return_error!(
+                    ErrorType::FileReadError,
+                    format!("Rules list should be a list of rule objects")
+                );
+            }
+        };
+
+        let pattern = match rule_object.get("pattern") {
+            Some(serde_json::Value::String(ptn)) => ptn,
+            _ => return_error!(
+                ErrorType::SyntaxFileError,
+                "Rule objects must have non-empty string field 'pattern'".to_string()
+            ),
         }
+        .to_string();
+        if pattern.is_empty() {
+            return_error!(
+                ErrorType::SyntaxFileError,
+                "Rule objects must have non-empty string field 'pattern'".to_string()
+            );
+        }
+
+        let follows = Self::parse_category_array_field(&rule_object, "follows")?.unwrap_or(
+            category_defaults
+                .default_follows
+                .clone()
+                .unwrap_or_default(),
+        );
+        let precedes = Self::parse_category_array_field(&rule_object, "precedes")?.unwrap_or(
+            category_defaults
+                .default_precedes
+                .clone()
+                .unwrap_or_default(),
+        );
+        if follows.is_empty() {
+            return_error!(
+                ErrorType::SyntaxFileError,
+                "Rule object has no defined rules for 'follows'".to_string()
+            );
+        }
+        if precedes.is_empty() {
+            return_error!(
+                ErrorType::SyntaxFileError,
+                "Rule object has no defined rules for 'precedes'".to_string()
+            );
+        }
+
+        Ok(match category_defaults.category_enum {
+            Category::Literal => Rule::new_literal_rule(pattern, follows, precedes),
+            Category::Variable => Rule::new_variable_rule(pattern, follows, precedes),
+            Category::CloseBracket | Category::OpenBracket | Category::Separator => {
+                Rule::new_non_expression_rule(
+                    pattern,
+                    category_defaults.category_enum.clone(),
+                    follows,
+                    precedes,
+                )
+            }
+            Category::Constant | Category::Function | Category::Operator => {
+                let label = match rule_object.get("label") {
+                    Some(serde_json::Value::String(s)) => s.as_str(),
+                    _ => return_error!(
+                        ErrorType::SyntaxFileError,
+                        "Function, Operator and Constant rules require string field 'Label'"
+                            .to_string()
+                    ),
+                };
+                let binding = match function_bindings.get(label) {
+                    Some(f) => f,
+                    _ => return_error!(
+                        ErrorType::SyntaxFileError,
+                        format!("No binding found for label '{}'", label)
+                    ),
+                };
+                Rule::new_function_rule(
+                    pattern,
+                    Self::parse_precedence_field(&rule_object)?
+                        .unwrap_or(category_defaults.default_precedence),
+                    category_defaults.category_enum.clone(),
+                    Self::parse_associativity_field(
+                        &rule_object,
+                        category_defaults.default_associativity.clone(),
+                    )?,
+                    binding.function,
+                    follows,
+                    precedes,
+                    binding.num_inputs,
+                )
+            }
+        })
+    }
 
     // parses category enum from json
     fn parse_category_field(
@@ -130,7 +238,7 @@ impl<T: NumericType> Ruleset<T> {
         };
         let category_enum = match Category::from_string(category_str) {
             Ok(category_enum) => category_enum,
-            Err(error) => {
+            Err(_) => {
                 return_error!(
                     ErrorType::SyntaxFileError,
                     format!("Value '{}' for field 'category' is not valid", category_str)
@@ -149,17 +257,20 @@ impl<T: NumericType> Ruleset<T> {
     fn parse_category_array_field(
         json_object: &serde_json::Map<String, serde_json::Value>,
         field_label: &str,
-    ) -> Result<Vec<Category>, Error> {
+    ) -> Result<Option<Vec<Category>>, Error> {
         // get defaults for `follows` and `precedes`
         let mut context_array = Vec::new();
 
         // check field is an array
         let default_values = match json_object.get(field_label) {
             Some(serde_json::Value::Array(json_vec)) => json_vec,
-            _ => return_error!(
+            Some(_) => return_error!(
                 ErrorType::SyntaxFileError,
                 format!("Field '{}' must be an array of category names", field_label)
             ),
+            None => {
+                return Ok(None);
+            }
         };
         // check array is array of valid category enums, and populate context_arrays with parsed enums
         for val in default_values {
@@ -181,35 +292,29 @@ impl<T: NumericType> Ruleset<T> {
             }
         }
 
-        Ok(context_array)
+        Ok(Some(context_array))
     }
 
     // parse precedence from json object
     fn parse_precedence_field(
         json_object: &serde_json::Map<String, serde_json::Value>,
-        category_enum: &Category,
-        default_value: u32,
-    ) -> Result<u32, Error> {
+    ) -> Result<Option<u32>, Error> {
         match json_object.get("precedence") {
-        Some(serde_json::Value::Number(precedence)) => match precedence.as_u64().unwrap_or(u64::MAX).to_u32() {
-            Some(n) => Ok(n),
-            None => return_error!(
+            Some(serde_json::Value::Number(precedence)) => {
+                match precedence.as_u64().unwrap_or(u64::MAX).to_u32() {
+                    Some(n) => Ok(Some(n)),
+                    None => return_error!(
+                        ErrorType::SyntaxFileError,
+                        "Field 'precedence' is not a valid 32 bit unsigned integer".to_string()
+                    ),
+                }
+            }
+            Some(_) => return_error!(
                 ErrorType::SyntaxFileError,
                 "Field 'precedence' is not a valid 32 bit unsigned integer".to_string()
-            )
-        },
-        Some(_) => return_error!(
-            ErrorType::SyntaxFileError,
-            "Field 'precedence' is not a valid 32 bit unsigned integer".to_string()
-        ),
-        None => match category_enum {
-            Category::Operator | Category::Function => return_error!(
-                ErrorType::SyntaxFileError,
-                "Field 'precedence' of category objects is required when category is Function or Operator".to_string()
             ),
-            _ => Ok(default_value)
+            None => Ok(None),
         }
-    }
     }
 
     fn parse_associativity_field(

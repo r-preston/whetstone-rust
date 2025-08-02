@@ -8,8 +8,8 @@ use crate::{
 pub type FunctionPointer<T> = fn(&[T]) -> Value<T>;
 
 pub struct Function<T> {
-    function: FunctionPointer<T>,
-    num_inputs: usize,
+    pub function: FunctionPointer<T>,
+    pub num_inputs: usize,
 }
 
 impl<T: NumericType> Clone for Function<T> {

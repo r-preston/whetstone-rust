@@ -27,7 +27,7 @@ impl<T: NumericType> Variable<T> {
 impl<T: NumericType> Expression for Variable<T> {
     type ExprType = T;
 
-    fn evaluate(&self, values: &[T]) -> Value<T> {
+    fn evaluate(&self, _values: &[T]) -> Value<T> {
         Ok(self.value.get())
     }
 

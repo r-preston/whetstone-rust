@@ -23,9 +23,9 @@ Custom bindings can be passed to Parser::new
     {
         // required - see section 'Categories' above
         "category": "Operator",
-        // required - a list of categories that may appear directly after this token
+        // required if not specified for each individual rule - a list of categories that may appear directly after this token
         "follows": [],
-        // required - a list of categories that may appear directly before this token
+        // required if not specified for each individual rule - a list of categories that may appear directly before this token
         "precedes": [],
         // required if `category` is Operator or Function - defines order operations are resolved
         "precedence": 3,
@@ -38,11 +38,11 @@ Custom bindings can be passed to Parser::new
                 "pattern": "+",
                 // required if category is Function, Operator or Constant - unique label for code function associated with this operation or constant
                 "label": "Add",
-                // optional - overrides the same field of category if present
+                // optional if specified for category - overrides the same field of category if present
                 "precedence": 3,
-                // optional - overrides the same field of category if present
+                // optional if specified for category - overrides the same field of category if present
                 "follows": [],
-                // optional - overrides the same field of category if present
+                // optional if specified for category - overrides the same field of category if present
                 "precedes": [],
                 // optional - overrides the same field of category if present
                 "associativity": "LeftToRight"

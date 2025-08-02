@@ -18,7 +18,7 @@ impl<T: NumericType> Constant<T> {
 impl<T: NumericType> Expression for Constant<T> {
     type ExprType = T;
 
-    fn evaluate(&self, values: &[T]) -> Value<T> {
+    fn evaluate(&self, _values: &[T]) -> Value<T> {
         Ok(self.value)
     }
 

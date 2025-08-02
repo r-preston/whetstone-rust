@@ -82,7 +82,7 @@ impl<T: NumericType> Equation<T> {
             }
         };
         let mut input_values: Vec<T> = Vec::new();
-        for i in 0..expression.num_inputs() {
+        for _ in 0..expression.num_inputs() {
             input_values.push(self.evaluate_equation(iter)?);
         }
         expression.evaluate(input_values.as_slice())

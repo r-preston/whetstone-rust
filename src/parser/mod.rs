@@ -25,7 +25,7 @@ pub struct Parser<T: NumericType> {
     syntax_rules: Ruleset<T>,
 }
 
-impl<T: NumericType<ExprType = T>> Parser<T> {
+impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
     pub fn new(syntax: Syntax, custom_bindings: Option<BindingMap<T>>) -> Result<Parser<T>, Error> {
         // get json file containing rule definitions
         let rule_file: &str = match syntax {
@@ -106,7 +106,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             }
         }
         // actual equation
-        let expression_string = match captures.get(3) {
+        let _expression_string = match captures.get(3) {
             Some(group) => group.as_str(),
             None => {
                 return_error!(
