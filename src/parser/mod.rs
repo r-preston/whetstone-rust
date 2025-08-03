@@ -118,18 +118,19 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         };
 
         equation.set_data(self.parse_equation(expression_string)?);
-        
+
         Ok(equation)
     }
 
-    fn parse_equation(&self, equation_string: &str) -> Result<Vec<Box<dyn Expression<ExprType = T>>>, Error> {
+    fn parse_equation(
+        &self,
+        equation_string: &str,
+    ) -> Result<Vec<Box<dyn Expression<ExprType = T>>>, Error> {
         if equation_string.is_empty() {
             return_error!(ErrorType::SyntaxError, "Equation is empty".to_string());
         }
 
         let expressions = Vec::new();
-
-
 
         Ok(expressions)
     }

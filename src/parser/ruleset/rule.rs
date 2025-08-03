@@ -4,11 +4,13 @@ use crate::{
     expressions::{constant::Constant, function::Function, variable::Variable, Expression},
     NumericType,
 };
+use regex::Regex;
+use serde::{Deserialize, Serialize};
 
 use std::{fmt, marker::PhantomData};
 
 /// The type of expression a Rule represents
-#[derive(PartialEq, Clone, Eq, Hash)]
+#[derive(PartialEq, Clone, Eq, Hash, Serialize, Deserialize)]
 pub enum Category {
     /// an operation on two values, e.g. +, *, ^
     Operator,
@@ -85,14 +87,14 @@ impl fmt::Display for Category {
 }
 
 /// The order in which operations with equal precedence should be resolved
-#[derive(Copy, Clone)]
-pub enum Associativity {
+#[derive(Copy, Clone, Serialize, Deserialize)]
+pub(crate) enum Associativity {
     LeftToRight,
     RightToLeft,
 }
 
 pub struct Rule<T: NumericType> {
-    pattern: String,
+    pattern: Regex,
     precedence: u32,
     category: Category,
     binding: Option<(Function<T>, Associativity)>,
@@ -102,8 +104,8 @@ pub struct Rule<T: NumericType> {
 }
 
 impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
-    pub fn new_non_expression_rule(
-        pattern: String,
+    pub(crate) fn new_non_expression_rule(
+        pattern: Regex,
         category: Category,
         follows: Vec<Category>,
         precedes: Vec<Category>,
@@ -119,8 +121,8 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         }
     }
 
-    pub fn new_function_rule(
-        pattern: String,
+    pub(crate) fn new_function_rule(
+        pattern: Regex,
         precedence: u32,
         category: Category,
         associativity: Associativity,
@@ -140,8 +142,8 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         }
     }
 
-    pub fn new_literal_rule(
-        pattern: String,
+    pub(crate) fn new_literal_rule(
+        pattern: Regex,
         follows: Vec<Category>,
         precedes: Vec<Category>,
     ) -> Rule<T> {
@@ -156,8 +158,8 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         }
     }
 
-    pub fn new_variable_rule(
-        pattern: String,
+    pub(crate) fn new_variable_rule(
+        pattern: Regex,
         follows: Vec<Category>,
         precedes: Vec<Category>,
     ) -> Rule<T> {

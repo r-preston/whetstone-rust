@@ -1,19 +1,19 @@
 [
     {
-    "category": "Operator",
-    "precedence": 3,
-    "follows": [],
-    "precedes": [],
-    "associativity": "LeftToRight",
-    "rules": [
-        {
-            "pattern": "+",
-            "label": "Add",
-            "precedence": 3,
-            "follows": [],
-            "precedes": [],
-            "associativity": "LeftToRight"
-        }
-    ]
+        "category": "Operator",
+        "precedence": 3,
+        "follows": ["Operator"],
+        "precedes": ["Operator"],
+        "associativity": "LeftToRight",
+        "rules": [
+            {
+                "pattern": "\\+",
+                "label": "Add",
+                "precedence": 3,
+                "follows": ["Function"],
+                "precedes": ["Function"],
+                "associativity": "LeftToRight"
+            }
+        ]
     }
 ]

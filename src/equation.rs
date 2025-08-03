@@ -36,7 +36,10 @@ impl<T: NumericType> Equation<T> {
 
     pub fn evaluate(&self, variables: VariableValues<T>) -> Value<T> {
         if self.data.is_empty() {
-            return_error!(ErrorType::NotInitialisedError, "Equation is empty".to_string());
+            return_error!(
+                ErrorType::NotInitialisedError,
+                "Equation is empty".to_string()
+            );
         }
         for &(label, value) in variables.iter() {
             self.set_variable(label, value)?;

@@ -5,7 +5,7 @@ pub enum ErrorType {
     /// Provided syntax file could not be read
     FileReadError,
     /// Syntax file is improperly formatted and could not be parsed, with line number
-    RuleJsonError,
+    RuleParseError,
     /// Equation string is improperly formatted and could not be parsed
     SyntaxError,
     /// Attempt to evaluate an uninitialised function
