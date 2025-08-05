@@ -20,5 +20,3 @@ pub use error::{Error, ErrorType};
 
 // define constraint for the type of value used by an Equation
 pub trait NumericType: num_traits::float::Float + BuiltinBindings + std::str::FromStr {}
-impl NumericType for f32 {}
-impl NumericType for f64 {}

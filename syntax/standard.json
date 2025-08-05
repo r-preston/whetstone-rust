@@ -1,18 +1,50 @@
 [
     {
         "category": "Operator",
-        "precedence": 3,
-        "follows": ["Operator"],
-        "precedes": ["Operator"],
-        "associativity": "LeftToRight",
+        "follows": ["Literal"],
+        "precedes": ["Literal"],
         "rules": [
             {
                 "pattern": "\\+",
                 "label": "Add",
+                "precedence": 1
+            },
+            {
+                "pattern": "-",
+                "label": "Subtract",
+                "precedence": 1
+            },
+            {
+                "pattern": "\\*",
+                "label": "Multiply",
+                "precedence": 2
+            },
+            {
+                "pattern": "",
+                "label": "Multiply",
+                "follows": ["Literal", "Operator"],
+                "precedence": 2
+            },
+            {
+                "pattern": "/",
+                "label": "Divide",
+                "precedence": 2
+            },
+            {
+                "pattern": "^",
+                "label": "Exponent",
                 "precedence": 3,
-                "follows": ["Function"],
-                "precedes": ["Function"],
-                "associativity": "LeftToRight"
+                "associativity": "RightToLeft"
+            }
+        ]
+    },
+    {
+        "category": "Literal",
+        "follows": ["Operator"],
+        "precedes": ["Operator"],
+        "rules": [
+            {
+                "pattern": "-?[0-9]+(\\.[0-9]+)?"
             }
         ]
     }

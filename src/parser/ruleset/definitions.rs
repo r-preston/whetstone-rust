@@ -15,3 +15,7 @@ pub fn multiply<T: NumericType>(args: &[T]) -> Value<T> {
 pub fn divide<T: NumericType>(args: &[T]) -> Value<T> {
     Ok(args[0] / args[1])
 }
+
+pub fn exponent<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0].powf(args[1]))
+}

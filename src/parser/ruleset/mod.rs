@@ -18,7 +18,7 @@ pub struct Ruleset<T: NumericType> {
 }
 
 #[derive(Serialize, Deserialize)]
-pub(crate) struct RuleJson {
+struct RuleJson {
     pattern: String,
     label: Option<String>,
     precedence: Option<u32>,
@@ -31,8 +31,8 @@ pub(crate) struct RuleJson {
 #[derive(Serialize, Deserialize)]
 struct RuleCategoryJson {
     category: Category,
-    associativity: Associativity,
-    precedence: u32,
+    associativity: Option<Associativity>,
+    precedence: Option<u32>,
     follows: Vec<Category>,
     precedes: Vec<Category>,
     rules: Vec<RuleJson>,
@@ -76,6 +76,18 @@ impl<T: NumericType + 'static> Ruleset<T> {
                 format!("JSON error in rule definition: {:?}", e)
             ),
         };
+        for category in rule_definitions.iter() {
+            let category_definitions = rule_definitions
+                .iter()
+                .filter(|x| x.category == category.category)
+                .count();
+            if category_definitions > 1 {
+                return_error!(
+                    ErrorType::RuleParseError,
+                    format!("Multiple definitions for category '{}'", category.category)
+                );
+            }
+        }
 
         let mut rules = Vec::new();
 
@@ -119,12 +131,19 @@ impl<T: NumericType + 'static> Ruleset<T> {
                                 format!("No binding found for label '{}'", label)
                             ),
                         };
-
+                        let associativity = rule_def.associativity.unwrap_or(category_def.associativity.unwrap_or(Associativity::LeftToRight));
+                        let precedence = match category_def.precedence {
+                            Some(n) => n,
+                            None => match rule_def.precedence {
+                                Some(n) => n,
+                                None => {return_error!(ErrorType::RuleParseError, format!("Field 'precedence' is required for Operator and Function rules"))}
+                            }
+                        };
                         Rule::new_function_rule(
                             pattern,
-                            rule_def.precedence.unwrap_or(category_def.precedence),
+                            precedence,
                             category_def.category.clone(),
-                            rule_def.associativity.unwrap_or(category_def.associativity),
+                            associativity,
                             binding.function,
                             follows,
                             precedes,

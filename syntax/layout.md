@@ -9,7 +9,7 @@ must be one of:
 //     OpenBracket - opening parenthesis
 //     CloseBracket -  closing parenthesis
 //     Separator - tokens that are required by the syntax but have no direct affect, for example the separator between function arguments
-        
+
 Each category can only have one entry
 Variable is only required category and must contain exactly one rule
 
@@ -21,16 +21,16 @@ Custom bindings can be passed to Parser::new
 ```json
 [
     {
-        // required - see section 'Categories' above
+        // required
         "category": "Operator",
-        // required if not specified for each individual rule - a list of categories that may appear directly after this token
-        "follows": [],
-        // required if not specified for each individual rule - a list of categories that may appear directly before this token
-        "precedes": [],
-        // required if `category` is Operator or Function - defines order operations are resolved
+        // required if `category` is Operator or Function and not defined for any rule - defines order operations are resolved
         "precedence": 3,
-        // optional - defines order that operations with the same precedence are resolved. May be LeftToRight or RightToLeft, defaults to LeftToRight
+        // optional - defines order that operations with the same precedence are resolved, defaults to LeftToRight
         "associativity": "LeftToRight",
+        // required - a list of categories that may appear directly after this token
+        "follows": ["Function", "Literal", "Constant"],
+        // required - a list of categories that may appear directly before this token
+        "precedes": ["Operator"],
         // required, list of specific rules belonging to this category
         "rules": [
             {
@@ -38,14 +38,14 @@ Custom bindings can be passed to Parser::new
                 "pattern": "+",
                 // required if category is Function, Operator or Constant - unique label for code function associated with this operation or constant
                 "label": "Add",
-                // optional if specified for category - overrides the same field of category if present
+                // optional if category is Operator or Function and not defined for category - overrides the same field of category if present
                 "precedence": 3,
-                // optional if specified for category - overrides the same field of category if present
-                "follows": [],
-                // optional if specified for category - overrides the same field of category if present
-                "precedes": [],
                 // optional - overrides the same field of category if present
-                "associativity": "LeftToRight"
+                "associativity": "LeftToRight",
+                // optional - overrides the same field of category if present
+                "follows": ["Literal", "Constant"],
+                // optional - overrides the same field of category if present
+                "precedes": ["Operator", "Function"]
             }
         ]
     },
