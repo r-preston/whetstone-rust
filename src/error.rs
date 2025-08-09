@@ -14,6 +14,8 @@ pub enum ErrorType {
     NoSuchVariableError,
     /// Internal logic error
     InternalError,
+    /// An error occurred registering function bindings
+    BindingError,
 }
 #[derive(Debug)]
 pub struct Error {

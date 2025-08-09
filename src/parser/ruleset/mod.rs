@@ -1,13 +1,12 @@
-pub mod bindings;
-pub mod definitions;
 mod rule;
 
 use super::Syntax;
 use crate::{
     error::{return_error, Error, ErrorType},
+    expressions::function::Function,
+    parser::bindings::FunctionBindings,
     NumericType,
 };
-use bindings::BindingMap;
 use regex::Regex;
 use rule::{Associativity, Category, Rule};
 use serde::{Deserialize, Serialize};
@@ -53,8 +52,8 @@ pub fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
     }
 }
 
-impl<T: NumericType + 'static> Ruleset<T> {
-    pub fn load_ruleset(path: &str, function_bindings: BindingMap<T>) -> Result<Ruleset<T>, Error> {
+impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
+    pub fn load_ruleset(path: &str) -> Result<Ruleset<T>, Error> {
         if !fs::exists(path).unwrap_or(false) {
             return_error!(
                 ErrorType::FileNotFoundError,
@@ -89,7 +88,7 @@ impl<T: NumericType + 'static> Ruleset<T> {
             }
         }
 
-        let mut rules = Vec::new();
+        let mut rules: Vec<Box<Rule<T>>> = Vec::new();
 
         for category_def in rule_definitions {
             for rule_def in category_def.rules {
@@ -124,11 +123,12 @@ impl<T: NumericType + 'static> Ruleset<T> {
                             Some(s) => s, _ => return_error!(ErrorType::RuleParseError,format!("Function, Operator and Constant rules require string field 'label'")),
                         };
 
-                        let binding = match function_bindings.get(label.as_str()) {
+                        let binding_opt: Option<Function<T>> = <T as FunctionBindings>::get_binding(&label);
+                        let binding: Function<T> = match binding_opt {
                             Some(f) => f,
                             _ => return_error!(
                                 ErrorType::RuleParseError,
-                                format!("No binding found for label '{}'", label)
+                                format!("No binding found for label '{}' and type {}", label, "f32")
                             ),
                         };
                         let associativity = rule_def.associativity.unwrap_or(category_def.associativity.unwrap_or(Associativity::LeftToRight));
