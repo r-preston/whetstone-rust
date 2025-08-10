@@ -38,19 +38,11 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                 None => {
                     return_error!(
                         ErrorType::InternalError,
-                        "Syntax does not have any built-in rules registered".to_string()
+                        "Syntax does not have rules registered".to_string()
                     );
                 }
             },
         };
-        // generate map of function bindings
-        /*
-        let mut bindings = T::get_bindings();
-        match custom_bindings {
-            Some(existing) => bindings.extend(existing),
-            None => (),
-        };
-        */
         // load and validate rules from file
         match Ruleset::load_ruleset(&rule_file) {
             Ok(syntax_rules) => Ok(Parser::<T> {
