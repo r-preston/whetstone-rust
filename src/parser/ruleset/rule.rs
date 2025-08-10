@@ -5,89 +5,48 @@ use crate::{
     NumericType,
 };
 use regex::Regex;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use std::{fmt, marker::PhantomData};
 
 /// The type of expression a Rule represents
-#[derive(PartialEq, Clone, Eq, Hash, Serialize, Deserialize)]
+#[derive(PartialEq, Clone, Eq, Hash, Deserialize)]
 pub enum Category {
     /// an operation on two values, e.g. +, *, ^
-    Operator,
+    Operators,
     /// a function of 1 or more arguments, e.g. sin, ln
-    Function,
+    Functions,
     /// a number such as 2, -0.5 etc
-    Literal,
+    Literals,
     /// mathematical constant such as pi or e
-    Constant,
+    Constants,
     /// placeholder for a value that can be changed for each evaluation
-    Variable,
+    Variables,
     /// opening parenthesis
-    OpenBracket,
+    OpenBrackets,
     /// closing parenthesis
-    CloseBracket,
+    CloseBrackets,
     /// tokens that are required by the syntax but have no direct affect, for example the separator between function arguments
-    Separator,
-}
-
-impl Category {
-    fn string_representations() -> &'static [(Category, &'static str)] {
-        &[
-            (Self::Operator, "Operator"),
-            (Self::Function, "Function"),
-            (Self::Literal, "Literal"),
-            (Self::Constant, "Constant"),
-            (Self::Variable, "Variable"),
-            (Self::OpenBracket, "OpenBracket"),
-            (Self::CloseBracket, "CloseBracket"),
-            (Self::Separator, "Separator"),
-        ]
-    }
-
-    pub fn to_string(category: Category) -> Result<&'static str, Error> {
-        match Self::string_representations()
-            .iter()
-            .find(|x| x.0 == category)
-        {
-            Some(val) => Ok(val.1),
-            None => return_error!(
-                ErrorType::InternalError,
-                "No string respresentation available for enum value".to_string()
-            ),
-        }
-    }
-
-    pub fn from_string(string_val: &str) -> Result<Category, Error> {
-        match Self::string_representations()
-            .iter()
-            .find(|x| x.1 == string_val)
-        {
-            Some(val) => Ok(val.0.clone()),
-            None => return_error!(
-                ErrorType::InternalError,
-                format!("No match for string '{}'", string_val)
-            ),
-        }
-    }
+    Separators,
 }
 
 impl fmt::Display for Category {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Operator => write!(f, "Operator"),
-            Self::Function => write!(f, "Function"),
-            Self::Literal => write!(f, "Literal"),
-            Self::Constant => write!(f, "Constant"),
-            Self::Variable => write!(f, "Variable"),
-            Self::OpenBracket => write!(f, "OpenBracket"),
-            Self::CloseBracket => write!(f, "CloseBracket"),
-            Self::Separator => write!(f, "Separator"),
+            Self::Operators => write!(f, "Operators"),
+            Self::Functions => write!(f, "Functions"),
+            Self::Literals => write!(f, "Literals"),
+            Self::Constants => write!(f, "Constants"),
+            Self::Variables => write!(f, "Variables"),
+            Self::OpenBrackets => write!(f, "OpenBrackets"),
+            Self::CloseBrackets => write!(f, "CloseBrackets"),
+            Self::Separators => write!(f, "Separators"),
         }
     }
 }
 
 /// The order in which operations with equal precedence should be resolved
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Deserialize)]
 pub(crate) enum Associativity {
     LeftToRight,
     RightToLeft,
@@ -150,7 +109,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
-            category: Category::Literal,
+            category: Category::Literals,
             binding: None,
             follows,
             precedes,
@@ -166,7 +125,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
-            category: Category::Variable,
+            category: Category::Variables,
             binding: None,
             follows,
             precedes,
@@ -174,17 +133,41 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         }
     }
 
+    fn allowed_at_start(&self) -> bool {
+        match self.category {
+            Category::Constants
+            | Category::Functions
+            | Category::Literals
+            | Category::OpenBrackets
+            | Category::Variables => true,
+            Category::CloseBrackets | Category::Operators | Category::Separators => false,
+        }
+    }
+
+    fn allowed_at_end(&self) -> bool {
+        match self.category {
+            Category::CloseBrackets
+            | Category::Constants
+            | Category::Literals
+            | Category::Variables => true,
+            Category::Functions
+            | Category::OpenBrackets
+            | Category::Operators
+            | Category::Separators => false,
+        }
+    }
+
     fn expression(&self, token: &str) -> Result<Box<dyn Expression<ExprType = T>>, Error> {
         match self.category {
             // Rules that produce an Expression of type Function
-            Category::Operator | Category::Function | Category::Constant => match self.binding {
+            Category::Operators | Category::Functions | Category::Constants => match self.binding {
                 Some(ref bind) => Ok(Box::new(bind.0.clone())),
                 None => {
                     return_error!(ErrorType::InternalError, format!("Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category));
                 }
             },
             // Rules that produce an Expression of type Constant
-            Category::Literal => match token.parse::<T>() {
+            Category::Literals => match token.parse::<T>() {
                 Ok(value) => Ok(Box::new(Constant::new(value))),
                 Err(_) => {
                     return_error!(
@@ -194,7 +177,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
                 }
             },
             // Rules that produce an Expression of type Variable
-            Category::Variable => Ok(Box::new(Variable::new(
+            Category::Variables => Ok(Box::new(Variable::new(
                 token,
                 <Variable<T> as Expression>::ExprType::from(0.0).unwrap(),
             ))),

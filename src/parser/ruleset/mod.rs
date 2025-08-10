@@ -9,14 +9,14 @@ use crate::{
 };
 use regex::Regex;
 use rule::{Associativity, Category, Rule};
-use serde::{Deserialize, Serialize};
-use std::fs;
+use serde::Deserialize;
+use std::{collections::HashMap, fs};
 
 pub struct Ruleset<T: NumericType> {
     rules: Vec<Box<Rule<T>>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct RuleJson {
     pattern: String,
     label: Option<String>,
@@ -27,15 +27,20 @@ struct RuleJson {
     precedes: Option<Vec<Category>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct RuleCategoryJson {
-    category: Category,
     associativity: Option<Associativity>,
     precedence: Option<u32>,
     follows: Vec<Category>,
     precedes: Vec<Category>,
     rules: Vec<RuleJson>,
 }
+
+#[derive(Deserialize)]
+struct RuleFileJson(
+    #[serde(with = "::serde_with::rust::maps_duplicate_key_is_error")]
+    HashMap<Category, RuleCategoryJson>,
+);
 
 fn builtin_rulesets() -> &'static [(Syntax, &'static str)] {
     &[
@@ -68,31 +73,20 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
             }
         };
 
-        let rule_definitions = match serde_json::from_str::<Vec<RuleCategoryJson>>(&json_string) {
+        let rule_definitions = match serde_json::from_str::<RuleFileJson>(&json_string) {
             Ok(deserialized) => deserialized,
             Err(e) => return_error!(
                 ErrorType::RuleParseError,
                 format!("JSON error in rule definition: {:?}", e)
             ),
         };
-        for category in rule_definitions.iter() {
-            let category_definitions = rule_definitions
-                .iter()
-                .filter(|x| x.category == category.category)
-                .count();
-            if category_definitions > 1 {
-                return_error!(
-                    ErrorType::RuleParseError,
-                    format!("Multiple definitions for category '{}'", category.category)
-                );
-            }
-        }
 
         let mut rules: Vec<Box<Rule<T>>> = Vec::new();
 
-        for category_def in rule_definitions {
+        for (category, category_def) in rule_definitions.0 {
+            println!("{}", category);
             for rule_def in category_def.rules {
-                let pattern = match Regex::new(&rule_def.pattern) {
+                let pattern = match Regex::new(&format!("^({})(.*)", rule_def.pattern)) {
                     Ok(re) => re,
                     Err(e) => {
                         return_error!(
@@ -107,18 +101,18 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
                 let precedes = rule_def
                     .precedes
                     .unwrap_or_else(|| category_def.precedes.clone());
-                rules.push(Box::new(match category_def.category {
-                    Category::Literal => Rule::new_literal_rule(pattern, follows, precedes),
-                    Category::Variable => Rule::new_variable_rule(pattern, follows, precedes),
-                    Category::CloseBracket | Category::OpenBracket | Category::Separator => {
+                rules.push(Box::new(match category {
+                    Category::Literals => Rule::new_literal_rule(pattern, follows, precedes),
+                    Category::Variables => Rule::new_variable_rule(pattern, follows, precedes),
+                    Category::CloseBrackets | Category::OpenBrackets | Category::Separators => {
                         Rule::new_non_expression_rule(
                             pattern,
-                            category_def.category.clone(),
+                            category.clone(),
                             follows,
                             precedes,
                         )
                     }
-                    Category::Constant | Category::Function | Category::Operator => {
+                    Category::Constants | Category::Functions | Category::Operators => {
                         let label = match rule_def.label {
                             Some(s) => s, _ => return_error!(ErrorType::RuleParseError,format!("Function, Operator and Constant rules require string field 'label'")),
                         };
@@ -142,7 +136,7 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
                         Rule::new_function_rule(
                             pattern,
                             precedence,
-                            category_def.category.clone(),
+                            category.clone(),
                             associativity,
                             binding.function,
                             follows,

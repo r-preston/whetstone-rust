@@ -1,8 +1,7 @@
-[
-    {
-        "category": "Operator",
-        "follows": ["Literal"],
-        "precedes": ["Literal"],
+{
+    "Operators": {
+        "follows": ["Literals"],
+        "precedes": ["Literals"],
         "rules": [
             {
                 "pattern": "\\+",
@@ -22,7 +21,7 @@
             {
                 "pattern": "",
                 "label": "Multiply",
-                "follows": ["Literal", "Operator"],
+                "follows": ["Literals", "Operators"],
                 "precedence": 2
             },
             {
@@ -38,14 +37,13 @@
             }
         ]
     },
-    {
-        "category": "Literal",
-        "follows": ["Operator"],
-        "precedes": ["Operator"],
+    "Literals": {
+        "follows": ["Operators"],
+        "precedes": ["Operators"],
         "rules": [
             {
                 "pattern": "-?[0-9]+(\\.[0-9]+)?"
             }
         ]
     }
-]
+}
