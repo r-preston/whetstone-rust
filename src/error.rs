@@ -23,10 +23,10 @@ pub struct Error {
     pub message: String,
 }
 macro_rules! return_error {
-    ($error_type:expr, $message:expr) => {
+    ($error_type:expr, $($message:tt)*) => {
         return Err(Error {
             error_type: $error_type,
-            message: $message,
+            message: format!($($message)*),
         })
     };
 }

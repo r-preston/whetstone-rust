@@ -1,7 +1,6 @@
 {
     "Operators": {
-        "follows": ["Literals"],
-        "precedes": ["Literals"],
+        "may_follow": ["Literals", "Variables"],
         "rules": [
             {
                 "pattern": "\\+",
@@ -21,7 +20,7 @@
             {
                 "pattern": "",
                 "label": "Multiply",
-                "follows": ["Literals", "Operators"],
+                "may_follow": ["Literals", "Operators"],
                 "precedence": 2
             },
             {
@@ -30,7 +29,7 @@
                 "precedence": 2
             },
             {
-                "pattern": "^",
+                "pattern": "\\^",
                 "label": "Exponent",
                 "precedence": 3,
                 "associativity": "RightToLeft"
@@ -38,11 +37,18 @@
         ]
     },
     "Literals": {
-        "follows": ["Operators"],
-        "precedes": ["Operators"],
+        "may_follow": ["Operators"],
         "rules": [
             {
-                "pattern": "-?[0-9]+(\\.[0-9]+)?"
+                "pattern": "-?[0-9]+(?:\\.[0-9]+)?"
+            }
+        ]
+    },
+    "Variables": {
+        "may_follow": ["Operators", "Literals"],
+        "rules": [
+            {
+                "pattern": "[xyz]"
             }
         ]
     }

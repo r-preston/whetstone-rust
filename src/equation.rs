@@ -36,10 +36,7 @@ impl<T: NumericType> Equation<T> {
 
     pub fn evaluate(&self, variables: VariableValues<T>) -> Value<T> {
         if self.data.is_empty() {
-            return_error!(
-                ErrorType::NotInitialisedError,
-                "Equation is empty".to_string()
-            );
+            return_error!(ErrorType::NotInitialisedError, "Equation is empty");
         }
         for &(label, value) in variables.iter() {
             self.set_variable(label, value)?;
@@ -61,7 +58,7 @@ impl<T: NumericType> Equation<T> {
             None => {
                 return_error!(
                     ErrorType::NoSuchVariableError,
-                    "Equation does not contain a variable with that label".to_string()
+                    "Equation does not contain a variable with that label"
                 );
             }
         }
@@ -84,7 +81,6 @@ impl<T: NumericType> Equation<T> {
                 return_error!(
                     ErrorType::InternalError,
                     "An unexpected error occured, equation data is internally inconsistent"
-                        .to_string()
                 );
             }
         };

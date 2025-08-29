@@ -4,14 +4,14 @@ use crate::{
     expressions::{constant::Constant, function::Function, variable::Variable, Expression},
     NumericType,
 };
-use regex::Regex;
+use regex::{Captures, Regex};
 use serde::Deserialize;
 
 use std::{fmt, marker::PhantomData};
 
 /// The type of expression a Rule represents
-#[derive(PartialEq, Clone, Eq, Hash, Deserialize)]
-pub enum Category {
+#[derive(PartialEq, Copy, Clone, Eq, Hash, Deserialize)]
+pub(crate) enum Category {
     /// an operation on two values, e.g. +, *, ^
     Operators,
     /// a function of 1 or more arguments, e.g. sin, ln
@@ -52,22 +52,21 @@ pub(crate) enum Associativity {
     RightToLeft,
 }
 
-pub struct Rule<T: NumericType> {
+#[derive(Clone)]
+pub(crate) struct Rule<T: NumericType> {
     pattern: Regex,
     precedence: u32,
     category: Category,
     binding: Option<(Function<T>, Associativity)>,
     phantom: PhantomData<T>,
     follows: Vec<Category>,
-    precedes: Vec<Category>,
 }
 
 impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
-    pub(crate) fn new_non_expression_rule(
+    pub fn new_non_expression_rule(
         pattern: Regex,
         category: Category,
         follows: Vec<Category>,
-        precedes: Vec<Category>,
     ) -> Rule<T> {
         Rule {
             pattern,
@@ -75,19 +74,17 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             category,
             binding: None,
             follows,
-            precedes,
             phantom: PhantomData::<T>,
         }
     }
 
-    pub(crate) fn new_function_rule(
+    pub fn new_function_rule(
         pattern: Regex,
         precedence: u32,
         category: Category,
         associativity: Associativity,
         binding: fn(&[T]) -> Value<T>,
         follows: Vec<Category>,
-        precedes: Vec<Category>,
         num_arguments: usize,
     ) -> Rule<T> {
         Rule {
@@ -96,44 +93,33 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             category,
             binding: (Some((Function::new(binding, num_arguments), associativity))),
             follows,
-            precedes,
             phantom: PhantomData::<T>,
         }
     }
 
-    pub(crate) fn new_literal_rule(
-        pattern: Regex,
-        follows: Vec<Category>,
-        precedes: Vec<Category>,
-    ) -> Rule<T> {
+    pub fn new_literal_rule(pattern: Regex, follows: Vec<Category>) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
             category: Category::Literals,
             binding: None,
             follows,
-            precedes,
             phantom: PhantomData::<T>,
         }
     }
 
-    pub(crate) fn new_variable_rule(
-        pattern: Regex,
-        follows: Vec<Category>,
-        precedes: Vec<Category>,
-    ) -> Rule<T> {
+    pub fn new_variable_rule(pattern: Regex, follows: Vec<Category>) -> Rule<T> {
         Rule {
             pattern,
             precedence: 0,
             category: Category::Variables,
             binding: None,
             follows,
-            precedes,
             phantom: PhantomData::<T>,
         }
     }
 
-    fn allowed_at_start(&self) -> bool {
+    pub fn allowed_at_start(&self) -> bool {
         match self.category {
             Category::Constants
             | Category::Functions
@@ -144,7 +130,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         }
     }
 
-    fn allowed_at_end(&self) -> bool {
+    pub fn allowed_at_end(&self) -> bool {
         match self.category {
             Category::CloseBrackets
             | Category::Constants
@@ -157,22 +143,61 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         }
     }
 
-    fn expression(&self, token: &str) -> Result<Box<dyn Expression<ExprType = T>>, Error> {
+    pub fn can_follow(&self, token: Option<Category>) -> bool {
+        match token {
+            Some(category) => self.follows.contains(&category),
+            None => self.allowed_at_start(),
+        }
+    }
+
+    pub fn category(&self) -> Category {
+        self.category
+    }
+
+    pub fn priority(&self) -> u32 {
+        match self.category {
+            Category::OpenBrackets | Category::CloseBrackets | Category::Separators => 5,
+            Category::Operators => 4,
+            Category::Functions | Category::Constants => 3,
+            Category::Literals => 2,
+            Category::Variables => 1,
+        }
+    }
+
+    pub fn matches(&self, eq_str: &str) -> bool {
+        match eq_str.is_empty() {
+            true => self.allowed_at_end(),
+            false => self.pattern.find(eq_str).is_some(),
+        }
+    }
+
+    pub fn get_match<'a>(&self, eq_str: &'a str) -> Option<(&'a str, &'a str)> {
+        let res: Captures<'a> = self.pattern.captures(eq_str)?;
+        match res.get(1)?.is_empty() {
+            true => None,
+            false => Some((res.get(1)?.into(), res.get(2)?.into())),
+        }
+    }
+
+    pub fn expression(&self, token: &str) -> Result<Box<dyn Expression<ExprType = T>>, Error> {
         match self.category {
             // Rules that produce an Expression of type Function
-            Category::Operators | Category::Functions | Category::Constants => match self.binding {
-                Some(ref bind) => Ok(Box::new(bind.0.clone())),
-                None => {
-                    return_error!(ErrorType::InternalError, format!("Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category));
+            Category::Operators | Category::Functions | Category::Constants => {
+                match self.binding {
+                    Some(ref bind) => Ok(Box::new(bind.0.clone())),
+                    None => {
+                        return_error!(ErrorType::InternalError, "Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category);
+                    }
                 }
-            },
+            }
             // Rules that produce an Expression of type Constant
             Category::Literals => match token.parse::<T>() {
                 Ok(value) => Ok(Box::new(Constant::new(value))),
                 Err(_) => {
                     return_error!(
                         ErrorType::SyntaxError,
-                        format!("Could not parse literal '{}' as a number", token)
+                        "Could not parse literal '{}' as a number",
+                        token
                     );
                 }
             },
@@ -183,7 +208,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             ))),
             // Rules that do not correspond to an Expression
             _ => {
-                return_error!(ErrorType::InternalError, format!("Attempted to get expression for syntax rule '{}' with expressionless category {}", token, self.category));
+                return_error!(ErrorType::InternalError, "Attempted to get expression for syntax rule '{}' with expressionless category {}", token, self.category);
             }
         }
     }

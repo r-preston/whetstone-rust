@@ -3,6 +3,7 @@ pub mod ruleset;
 
 use crate::equation::Equation;
 use crate::expressions::Expression;
+use crate::parser::ruleset::rule::{Category, Rule};
 use crate::{
     error::{return_error, Error, ErrorType},
     NumericType,
@@ -13,6 +14,12 @@ use ruleset::Ruleset;
 use crate::expressions::variable::validate_label;
 
 use regex::Regex;
+
+macro_rules! syntax_error {
+    ($($t:tt)*) => {
+        return_error!(ErrorType::SyntaxError, $($t)*)
+    };
+}
 
 #[derive(PartialEq)]
 pub enum Syntax {
@@ -38,7 +45,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                 None => {
                     return_error!(
                         ErrorType::InternalError,
-                        "Syntax does not have rules registered".to_string()
+                        "Syntax does not have rules registered"
                     );
                 }
             },
@@ -64,19 +71,13 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
          * If a comma separated list of variables is provided between brackets after the label, the parser will only accept explicitly named variables in the expression
          */
         if equation_string.is_empty() {
-            return_error!(
-                ErrorType::SyntaxError,
-                "Equation string should not be empty".to_string()
-            );
+            syntax_error!("Equation string should not be empty");
         }
         let labeled_func = Regex::new(r"^(?:([^\(\)]+?)(?:\((.*)\))?\s*=\s*)?(.+)$").unwrap();
         let captures = match labeled_func.captures(equation_string) {
             Some(captures) => captures,
             None => {
-                return_error!(
-                    ErrorType::SyntaxError,
-                    "Could not parse equation".to_string()
-                );
+                syntax_error!("Could not parse equation");
             }
         };
 
@@ -92,10 +93,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
             for variable in variables.into_iter() {
                 let trimmed_var = variable.trim();
                 if !validate_label(trimmed_var) {
-                    return_error!(
-                        ErrorType::SyntaxError,
-                        format!("Explicit variable '{}' is not valid", trimmed_var)
-                    );
+                    syntax_error!("Explicit variable '{}' is not valid", trimmed_var);
                 }
                 equation.add_variable(trimmed_var);
             }
@@ -104,10 +102,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         let expression_string = match captures.get(3) {
             Some(group) => group.as_str(),
             None => {
-                return_error!(
-                    ErrorType::SyntaxError,
-                    "Could not parse equation".to_string()
-                );
+                syntax_error!("Could not parse equation");
             }
         };
 
@@ -121,11 +116,124 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         equation_string: &str,
     ) -> Result<Vec<Box<dyn Expression<ExprType = T>>>, Error> {
         if equation_string.is_empty() {
-            return_error!(ErrorType::SyntaxError, "Equation is empty".to_string());
+            syntax_error!("Equation is empty");
         }
 
         let expressions = Vec::new();
+        //let operand_stack = Vec::new();
+
+        let mut remainder = equation_string.trim().to_string();
+        let mut last_token: Option<Category> = None;
+
+        while !remainder.is_empty() {
+            let (rule, remaining_str) = self.match_next_token(&remainder, &last_token)?;
+            remainder = remaining_str.trim().to_string();
+            last_token = Some(rule.category());
+        }
 
         Ok(expressions)
+    }
+
+    fn match_next_token(
+        &self,
+        equation_string: &str,
+        last_token: &Option<Category>,
+    ) -> Result<(Box<Rule<T>>, String), Error> {
+        // find all rules that match the next token of the equation
+
+        let mut invalid_matching_rules = Vec::new();
+        let mut matching_rules = Vec::new();
+        let mut num_valid_non_implicit_rules: u32 = 0;
+        let mut num_valid_implicit_rules: u32 = 0;
+        // get all rules that match the given equation substring
+        for rule in self.syntax_rules.as_slice() {
+            if let Some((matched, other)) = rule.get_match(equation_string) {
+                let valid = rule.can_follow(*last_token);
+                let implicit = matched.is_empty();
+                if valid {
+                    num_valid_non_implicit_rules += !implicit as u32;
+                    num_valid_implicit_rules += implicit as u32;
+                    matching_rules.push((rule, matched, other.trim(), implicit));
+                } else {
+                    invalid_matching_rules.push((rule, matched, other.trim(), implicit));
+                }
+            }
+        }
+
+        // Get number of rules that match given eq string and are valid in the context of last_token.
+        // Additionally, filter out any implicit rules (rules that match zero characters) if any non-implicit rules are valid
+        let mut valid_rules = matching_rules
+            .iter()
+            .filter(|(_, _, _, implicit)| (num_valid_non_implicit_rules == 0) || !implicit);
+        let num_valid_rules = num_valid_implicit_rules + num_valid_non_implicit_rules;
+
+        if num_valid_rules == 1 {
+            // exactly one valid matching rule - can return straight away
+            let rule = valid_rules.nth(0).unwrap();
+            return Ok((rule.0.clone(), rule.2.to_string()));
+        } else if num_valid_rules == 0 {
+            // no valid rules - generate helpful error message
+            let last_token_str = if last_token.is_none() {
+                "start of equation"
+            } else {
+                &last_token.unwrap().to_string()
+            };
+            match invalid_matching_rules.len() {
+                // string doesn't match any rule regex
+                0 => {
+                    syntax_error!(
+                        "No registered rules match start of expression '{}'",
+                        equation_string
+                    )
+                }
+                // one rule matches but context was not valid
+                1 => {
+                    let rule = invalid_matching_rules[0];
+                    syntax_error!(
+                        "{} {} rule may not appear after {}",
+                        if rule.1.is_empty() {
+                            format!("Implicit")
+                        } else {
+                            format!("'{}'", rule.1)
+                        },
+                        rule.0.category(),
+                        last_token_str
+                    )
+                }
+                // multiple rules matched but none had valid context
+                _ => {
+                    syntax_error!(
+                        "Multiple rules match start of '{}' but none may appear after {}",
+                        equation_string,
+                        last_token_str
+                    )
+                }
+            }
+        }
+
+        // Multiple rules match the string and are valid after the last token:
+        // sort rules descending by rule priority and then by number of characters matched
+        matching_rules.sort_by(|a, b| match b.0.priority().cmp(&a.0.priority()) {
+            std::cmp::Ordering::Equal => b.1.len().cmp(&a.1.len()),
+            unequal => unequal,
+        });
+
+        // Of the shortlist ordered by priority, pick the first matched rule for which the next token is valid
+        while let Some((matching_rule, _, remaining_equation, _)) = matching_rules.pop() {
+            for rule in self.syntax_rules.as_slice() {
+                // check if next token matches this rule
+                if !rule.matches(remaining_equation) {
+                    continue;
+                }
+                // check if next token context is valid
+                if !rule.can_follow(Some(matching_rule.category())) {
+                    continue;
+                }
+
+                return Ok((matching_rule.clone(), remaining_equation.to_string()));
+            }
+        }
+
+        syntax_error!("'{}' does not match any registered rule", equation_string);
     }
 }

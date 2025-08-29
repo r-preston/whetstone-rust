@@ -35,7 +35,6 @@ impl<T: NumericType> Expression for Function<T> {
             return_error!(
                 ErrorType::InternalError,
                 "Tried to call a function with a different number of arguments than expected"
-                    .to_string()
             );
         }
         (self.function)(values)

@@ -57,7 +57,7 @@ macro_rules! register_supported_type {
                         Some(_) => {
                             panic!(
                                 "Built-in binding already registered for label '{}' and type {}",
-                                label,std::any::type_name::<$Type>()
+                                label, std::any::type_name::<$Type>()
                             );
                         },
                         None => { map.insert(label, (*func, *arg_count)); }
@@ -74,10 +74,8 @@ macro_rules! register_supported_type {
                         true => {
                             return_error!(
                                 ErrorType::BindingError,
-                                format!(
-                                    "Binding already registered for label '{}' and type {}",
-                                    label, std::any::type_name::<$Type>()
-                                )
+                                "Binding already registered for label '{}' and type {}",
+                                label, std::any::type_name::<$Type>()
                             )
                         }
                     }
