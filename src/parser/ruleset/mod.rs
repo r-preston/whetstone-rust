@@ -16,8 +16,7 @@ pub(crate) struct Ruleset<T: NumericType>(Vec<Box<Rule<T>>>);
 
 #[derive(Deserialize)]
 struct RuleJson {
-    pattern: String,
-    label: Option<String>,
+    pattern: Option<String>,
     precedence: Option<u32>,
     associativity: Option<Associativity>,
     binding: Option<String>,
@@ -79,16 +78,27 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
 
         for (category, category_def) in rule_definitions.0 {
             for rule_def in category_def.rules {
-                let pattern = match Regex::new(&format!("^({})(.*)", rule_def.pattern)) {
-                    Ok(re) => re,
-                    Err(e) => {
-                        return_error!(
-                            ErrorType::RuleParseError,
-                            "Rule pattern is not a valid regex: {}",
-                            e
-                        )
+                if rule_def.pattern.is_none() {
+                    if category != Category::ImplicitOperators {
+                        return_error!(ErrorType::RuleParseError, "Rules require field 'pattern'")
                     }
-                };
+                } else if category == Category::ImplicitOperators {
+                    return_error!(
+                        ErrorType::RuleParseError,
+                        "ImplicitOperators no not support field 'pattern'"
+                    )
+                }
+                let pattern =
+                    match Regex::new(&format!("^({})(.*)", rule_def.pattern.unwrap_or(String::new()))) {
+                        Ok(re) => re,
+                        Err(e) => {
+                            return_error!(
+                                ErrorType::RuleParseError,
+                                "Rule pattern is not a valid regex: {}",
+                                e
+                            )
+                        }
+                    };
                 let follows = rule_def
                     .may_follow
                     .unwrap_or_else(|| category_def.may_follow.clone());
@@ -102,17 +112,17 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
                             follows,
                         )
                     }
-                    Category::Constants | Category::Functions | Category::Operators => {
-                        let label = match rule_def.label {
-                            Some(s) => s, _ => return_error!(ErrorType::RuleParseError, "Function, Operator and Constant rules require string field 'label'"),
+                    Category::Constants | Category::Functions | Category::Operators | Category::ImplicitOperators => {
+                        let binding = match rule_def.binding {
+                            Some(s) => s, _ => return_error!(ErrorType::RuleParseError, "Function, Operator and Constant rules require string field 'binding'"),
                         };
 
-                        let binding_opt: Option<Function<T>> = <T as FunctionBindings>::get_binding(&label);
+                        let binding_opt: Option<Function<T>> = <T as FunctionBindings>::get_binding(&binding);
                         let binding: Function<T> = match binding_opt {
                             Some(f) => f,
                             _ => return_error!(
                                 ErrorType::RuleParseError,
-                                "No binding found for label '{}' and type {}", label, std::any::type_name::<T>()
+                                "No binding found with label '{}' and type {}", binding, std::any::type_name::<T>()
                             ),
                         };
                         let associativity = rule_def.associativity.unwrap_or(category_def.default_associativity.unwrap_or(Associativity::LeftToRight));
@@ -133,7 +143,7 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
                             binding.num_inputs,
                         )
                     }
-                }))
+                }));
             }
         }
 

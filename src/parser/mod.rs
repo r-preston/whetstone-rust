@@ -124,9 +124,8 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
 
         let mut remainder = equation_string.trim().to_string();
         let mut last_token: Option<Category> = None;
-
         while !remainder.is_empty() {
-            let (rule, remaining_str) = self.match_next_token(&remainder, &last_token)?;
+            let (rule, _, remaining_str) = self.match_next_token(&remainder, &last_token)?;
             remainder = remaining_str.trim().to_string();
             last_token = Some(rule.category());
         }
@@ -138,47 +137,42 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         &self,
         equation_string: &str,
         last_token: &Option<Category>,
-    ) -> Result<(Box<Rule<T>>, String), Error> {
+    ) -> Result<(Box<Rule<T>>, String, String), Error> {
         // find all rules that match the next token of the equation
 
-        let mut invalid_matching_rules = Vec::new();
-        let mut matching_rules = Vec::new();
-        let mut num_valid_non_implicit_rules: u32 = 0;
-        let mut num_valid_implicit_rules: u32 = 0;
+        let mut invalid_rules = Vec::new();
+        let mut valid_rules = Vec::new();
         // get all rules that match the given equation substring
         for rule in self.syntax_rules.as_slice() {
             if let Some((matched, other)) = rule.get_match(equation_string) {
-                let valid = rule.can_follow(*last_token);
-                let implicit = matched.is_empty();
-                if valid {
-                    num_valid_non_implicit_rules += !implicit as u32;
-                    num_valid_implicit_rules += implicit as u32;
-                    matching_rules.push((rule, matched, other.trim(), implicit));
+                let context_valid = rule.can_follow(*last_token);
+                if context_valid {
+                    valid_rules.push((rule, matched, other.trim()));
                 } else {
-                    invalid_matching_rules.push((rule, matched, other.trim(), implicit));
+                    invalid_rules.push((rule, matched, other.trim()));
                 }
             }
         }
 
         // Get number of rules that match given eq string and are valid in the context of last_token.
         // Additionally, filter out any implicit rules (rules that match zero characters) if any non-implicit rules are valid
-        let mut valid_rules = matching_rules
+        let has_valid_non_implicit_rules = valid_rules
             .iter()
-            .filter(|(_, _, _, implicit)| (num_valid_non_implicit_rules == 0) || !implicit);
-        let num_valid_rules = num_valid_implicit_rules + num_valid_non_implicit_rules;
+            .filter(|(_, matched, _)| !matched.is_empty()).count() > 0;
+        let mut matching_rules: Vec<&(&Box<Rule<T>>, &str, &str)> = valid_rules.iter().filter(|(_, matched, _)| !has_valid_non_implicit_rules || !matched.is_empty()).collect();
 
-        if num_valid_rules == 1 {
+        if matching_rules.len() == 1 {
             // exactly one valid matching rule - can return straight away
-            let rule = valid_rules.nth(0).unwrap();
-            return Ok((rule.0.clone(), rule.2.to_string()));
-        } else if num_valid_rules == 0 {
+            let rule = matching_rules[0];
+            return Ok((rule.0.clone(), rule.1.to_string(), rule.2.to_string()));
+        } else if matching_rules.is_empty() {
             // no valid rules - generate helpful error message
             let last_token_str = if last_token.is_none() {
                 "start of equation"
             } else {
                 &last_token.unwrap().to_string()
             };
-            match invalid_matching_rules.len() {
+            match invalid_rules.len() {
                 // string doesn't match any rule regex
                 0 => {
                     syntax_error!(
@@ -188,7 +182,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                 }
                 // one rule matches but context was not valid
                 1 => {
-                    let rule = invalid_matching_rules[0];
+                    let rule = invalid_rules[0];
                     syntax_error!(
                         "{} {} rule may not appear after {}",
                         if rule.1.is_empty() {
@@ -219,7 +213,8 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         });
 
         // Of the shortlist ordered by priority, pick the first matched rule for which the next token is valid
-        while let Some((matching_rule, _, remaining_equation, _)) = matching_rules.pop() {
+        while let Some((matching_rule, matched_text, remaining_equation)) = matching_rules.pop()
+        {
             for rule in self.syntax_rules.as_slice() {
                 // check if next token matches this rule
                 if !rule.matches(remaining_equation) {
@@ -230,7 +225,11 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                     continue;
                 }
 
-                return Ok((matching_rule.clone(), remaining_equation.to_string()));
+                return Ok((
+                    (*matching_rule).clone(),
+                    matched_text.to_string(),
+                    remaining_equation.to_string(),
+                ));
             }
         }
 

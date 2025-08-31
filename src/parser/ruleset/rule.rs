@@ -14,6 +14,8 @@ use std::{fmt, marker::PhantomData};
 pub(crate) enum Category {
     /// an operation on two values, e.g. +, *, ^
     Operators,
+    /// an operation on two values, e.g. +, *, ^ that matches no characters and is implied by context
+    ImplicitOperators,
     /// a function of 1 or more arguments, e.g. sin, ln
     Functions,
     /// a number such as 2, -0.5 etc
@@ -34,6 +36,7 @@ impl fmt::Display for Category {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Operators => write!(f, "Operators"),
+            Self::ImplicitOperators => write!(f, "Implicit Operators"),
             Self::Functions => write!(f, "Functions"),
             Self::Literals => write!(f, "Literals"),
             Self::Constants => write!(f, "Constants"),
@@ -126,7 +129,10 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             | Category::Literals
             | Category::OpenBrackets
             | Category::Variables => true,
-            Category::CloseBrackets | Category::Operators | Category::Separators => false,
+            Category::CloseBrackets
+            | Category::Operators
+            | Category::ImplicitOperators
+            | Category::Separators => false,
         }
     }
 
@@ -139,6 +145,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             Category::Functions
             | Category::OpenBrackets
             | Category::Operators
+            | Category::ImplicitOperators
             | Category::Separators => false,
         }
     }
@@ -161,6 +168,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
             Category::Functions | Category::Constants => 3,
             Category::Literals => 2,
             Category::Variables => 1,
+            Category::ImplicitOperators => 0,
         }
     }
 
@@ -173,10 +181,7 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
 
     pub fn get_match<'a>(&self, eq_str: &'a str) -> Option<(&'a str, &'a str)> {
         let res: Captures<'a> = self.pattern.captures(eq_str)?;
-        match res.get(1)?.is_empty() {
-            true => None,
-            false => Some((res.get(1)?.into(), res.get(2)?.into())),
-        }
+        Some((res.get(1)?.into(), res.get(2)?.into()))
     }
 
     pub fn expression(&self, token: &str) -> Result<Box<dyn Expression<ExprType = T>>, Error> {

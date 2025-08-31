@@ -4,35 +4,38 @@
         "rules": [
             {
                 "pattern": "\\+",
-                "label": "Add",
+                "binding": "Add",
                 "precedence": 1
             },
             {
                 "pattern": "-",
-                "label": "Subtract",
+                "binding": "Subtract",
                 "precedence": 1
             },
             {
                 "pattern": "\\*",
-                "label": "Multiply",
-                "precedence": 2
-            },
-            {
-                "pattern": "",
-                "label": "Multiply",
-                "may_follow": ["Literals", "Operators"],
+                "binding": "Multiply",
                 "precedence": 2
             },
             {
                 "pattern": "/",
-                "label": "Divide",
+                "binding": "Divide",
                 "precedence": 2
             },
             {
                 "pattern": "\\^",
-                "label": "Exponent",
+                "binding": "Exponent",
                 "precedence": 3,
                 "associativity": "RightToLeft"
+            }
+        ]
+    },
+    "ImplicitOperators": {
+        "may_follow": ["Literals", "Variables"],
+        "rules": [
+            {
+                "binding": "Multiply",
+                "precedence": 2
             }
         ]
     },
@@ -45,7 +48,7 @@
         ]
     },
     "Variables": {
-        "may_follow": ["Operators", "Literals"],
+        "may_follow": ["Operators", "ImplicitOperators"],
         "rules": [
             {
                 "pattern": "[xyz]"
