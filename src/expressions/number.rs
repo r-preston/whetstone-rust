@@ -1,13 +1,13 @@
 use super::Expression;
 use crate::{equation::Value, NumericType};
 
-pub struct Constant<T: NumericType> {
+pub struct Number<T: NumericType> {
     value: T,
 }
 
-impl<T: NumericType> Constant<T> {
-    pub fn new(value: T) -> Constant<T> {
-        Constant::<T> { value }
+impl<T: NumericType> Number<T> {
+    pub fn new(value: T) -> Number<T> {
+        Number::<T> { value }
     }
 
     pub fn value(&self) -> &T {
@@ -15,7 +15,7 @@ impl<T: NumericType> Constant<T> {
     }
 }
 
-impl<T: NumericType> Expression for Constant<T> {
+impl<T: NumericType> Expression for Number<T> {
     type ExprType = T;
 
     fn evaluate(&self, _values: &[T]) -> Value<T> {

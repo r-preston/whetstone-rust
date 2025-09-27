@@ -1,7 +1,7 @@
 use crate::{
     equation::Value,
     error::{return_error, Error, ErrorType},
-    expressions::{constant::Constant, function::Function, variable::Variable, Expression},
+    expressions::{function::Function, number::Number, variable::Variable, Expression},
     NumericType,
 };
 use regex::{Captures, Regex};
@@ -49,7 +49,7 @@ impl fmt::Display for Category {
 }
 
 /// The order in which operations with equal precedence should be resolved
-#[derive(Copy, Clone, Deserialize)]
+#[derive(Copy, Clone, Deserialize, PartialEq)]
 pub(crate) enum Associativity {
     LeftToRight,
     RightToLeft,
@@ -172,6 +172,17 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         }
     }
 
+    pub fn precedence(&self) -> u32 {
+        self.precedence
+    }
+
+    pub fn left_associative(&self) -> bool {
+        match &self.binding {
+            Some((_, associativity)) => *associativity == Associativity::LeftToRight,
+            None => false,
+        }
+    }
+
     pub fn matches(&self, eq_str: &str) -> bool {
         match eq_str.is_empty() {
             true => self.allowed_at_end(),
@@ -184,20 +195,31 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         Some((res.get(1)?.into(), res.get(2)?.into()))
     }
 
-    pub fn expression(&self, token: &str) -> Result<Box<dyn Expression<ExprType = T>>, Error> {
+    pub fn expression(
+        &self,
+        token: &str,
+    ) -> Result<Option<Box<dyn Expression<ExprType = T>>>, Error> {
         match self.category {
             // Rules that produce an Expression of type Function
-            Category::Operators | Category::Functions | Category::Constants => {
+            Category::Operators | Category::Functions => {
                 match self.binding {
-                    Some(ref bind) => Ok(Box::new(bind.0.clone())),
+                    Some(ref bind) => Ok(Some(Box::new(bind.0.clone()))),
                     None => {
                         return_error!(ErrorType::InternalError, "Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category);
                     }
                 }
             }
-            // Rules that produce an Expression of type Constant
+            Category::Constants => {
+                match self.binding {
+                    Some(ref bind) => Ok(Some(Box::new(Number::new((bind.0.function)(&[])?)))),
+                    None => {
+                        return_error!(ErrorType::InternalError, "Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category);
+                    }
+                }
+            }
+            // Rules that produce an Expression of type Number
             Category::Literals => match token.parse::<T>() {
-                Ok(value) => Ok(Box::new(Constant::new(value))),
+                Ok(value) => Ok(Some(Box::new(Number::new(value)))),
                 Err(_) => {
                     return_error!(
                         ErrorType::SyntaxError,
@@ -207,13 +229,14 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
                 }
             },
             // Rules that produce an Expression of type Variable
-            Category::Variables => Ok(Box::new(Variable::new(
+            Category::Variables => Ok(Some(Box::new(Variable::new(
                 token,
                 <Variable<T> as Expression>::ExprType::from(0.0).unwrap(),
-            ))),
+            )))),
             // Rules that do not correspond to an Expression
             _ => {
-                return_error!(ErrorType::InternalError, "Attempted to get expression for syntax rule '{}' with expressionless category {}", token, self.category);
+                Ok(None)
+                //return_error!(ErrorType::InternalError, "Attempted to get expression for syntax rule '{}' with expressionless category {}", token, self.category);
             }
         }
     }

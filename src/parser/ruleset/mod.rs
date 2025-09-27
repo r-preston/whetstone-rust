@@ -88,17 +88,19 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
                         "ImplicitOperators no not support field 'pattern'"
                     )
                 }
-                let pattern =
-                    match Regex::new(&format!("^({})(.*)", rule_def.pattern.unwrap_or(String::new()))) {
-                        Ok(re) => re,
-                        Err(e) => {
-                            return_error!(
-                                ErrorType::RuleParseError,
-                                "Rule pattern is not a valid regex: {}",
-                                e
-                            )
-                        }
-                    };
+                let pattern = match Regex::new(&format!(
+                    "^({})(.*)",
+                    rule_def.pattern.unwrap_or(String::new())
+                )) {
+                    Ok(re) => re,
+                    Err(e) => {
+                        return_error!(
+                            ErrorType::RuleParseError,
+                            "Rule pattern is not a valid regex: {}",
+                            e
+                        )
+                    }
+                };
                 let follows = rule_def
                     .may_follow
                     .unwrap_or_else(|| category_def.may_follow.clone());

@@ -1,5 +1,5 @@
-pub mod constant;
 pub mod function;
+pub mod number;
 pub mod variable;
 
 use crate::equation::Value;

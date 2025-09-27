@@ -15,7 +15,6 @@ pub type VariableValues<'a, T> = &'a [(&'a str, T)];
 pub type Value<T> = Result<T, Error>;
 
 pub struct Equation<T: NumericType> {
-    label: String,
     // holds a list of expressions evaluated left to right
     data: Vec<Box<dyn Expression<ExprType = T>>>,
     // holds Rcs for each variable in the equation, which are also held by Variables in `data`
@@ -25,10 +24,9 @@ pub struct Equation<T: NumericType> {
 }
 
 impl<T: NumericType> Equation<T> {
-    pub(crate) fn new(label: &str) -> Equation<T> {
+    pub(crate) fn new(data: Vec<Box<dyn Expression<ExprType = T>>>) -> Equation<T> {
         Equation {
-            label: label.to_string(),
-            data: Vec::new(),
+            data: data,
             variables: HashMap::new(),
             phantom: PhantomData,
         }
@@ -64,13 +62,8 @@ impl<T: NumericType> Equation<T> {
         }
     }
 
-    pub(crate) fn label(&self) -> String {
-        let vars: Vec<String> = self.variables.keys().cloned().collect();
-        return format!("{}({})", self.label, vars.join(","));
-    }
-
-    pub(crate) fn set_data(&mut self, data: Vec<Box<dyn Expression<ExprType = T>>>) {
-        self.data = data;
+    pub(crate) fn variables(&self) -> Vec<String> {
+        self.variables.keys().cloned().collect()
     }
 
     fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<ExprType = T>>>) -> Value<T> {
