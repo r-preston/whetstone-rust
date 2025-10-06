@@ -189,6 +189,15 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
              *       {assert the operator on top of the stack is not a (left) parenthesis}
              *       pop the operator from the operator stack onto the output queue
              */
+            while !operator_stack.is_empty() {
+                let (rule, expression) = operator_stack.pop().unwrap();
+                if rule.category() == Category::OpenBrackets {
+                    syntax_error!("Mismatched bracket")
+                }
+                if expression.is_some() {
+                    expressions.push(expression.unwrap());
+                }
+            }
         }
 
         Ok(Equation::new(expressions))
@@ -209,7 +218,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                 let context_valid = rule.can_follow(*last_token);
                 if context_valid {
                     valid_rules.push((rule, matched, other.trim()));
-                } else {
+                } else if rule.category() != Category::ImplicitOperators {
                     invalid_rules.push((rule, matched, other.trim()));
                 }
             }
@@ -251,11 +260,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                     let rule = invalid_rules[0];
                     syntax_error!(
                         "{} {} rule may not appear after {}",
-                        if rule.1.is_empty() {
-                            format!("Implicit")
-                        } else {
-                            format!("'{}'", rule.1)
-                        },
+                        format!("'{}'", rule.1),
                         rule.0.category(),
                         last_token_str
                     )
