@@ -9,10 +9,10 @@ pub struct Variable<T: NumericType> {
 }
 
 impl<T: NumericType> Variable<T> {
-    pub fn new(label: &str, initial_value: T) -> Variable<T> {
+    pub fn new(label: &str, shared_value: &Rc<Cell<T>>) -> Variable<T> {
         Variable {
             label: label.to_string(),
-            value: Rc::new(Cell::new(initial_value)),
+            value: Rc::clone(shared_value),
         }
     }
 }

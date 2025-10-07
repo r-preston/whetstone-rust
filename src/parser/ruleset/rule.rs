@@ -1,9 +1,4 @@
-use crate::{
-    equation::Value,
-    error::{return_error, Error, ErrorType},
-    expressions::{function::Function, number::Number, variable::Variable, Expression},
-    NumericType,
-};
+use crate::{equation::Value, expressions::function::Function, NumericType};
 use regex::{Captures, Regex};
 use serde::Deserialize;
 
@@ -161,6 +156,10 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         self.category
     }
 
+    pub fn binding(&self) -> &Option<(Function<T>, Associativity)> {
+        &self.binding
+    }
+
     pub fn priority(&self) -> u32 {
         match self.category {
             Category::OpenBrackets | Category::CloseBrackets | Category::Separators => 5,
@@ -193,51 +192,5 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
     pub fn get_match<'a>(&self, eq_str: &'a str) -> Option<(&'a str, &'a str)> {
         let res: Captures<'a> = self.pattern.captures(eq_str)?;
         Some((res.get(1)?.into(), res.get(2)?.into()))
-    }
-
-    pub fn expression(
-        &self,
-        token: &str,
-    ) -> Result<Option<Box<dyn Expression<ExprType = T>>>, Error> {
-        match self.category {
-            // Rules that produce an Expression of type Function
-            Category::Operators | Category::Functions => {
-                match self.binding {
-                    Some(ref bind) => Ok(Some(Box::new(bind.0.clone()))),
-                    None => {
-                        return_error!(ErrorType::InternalError, "Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category);
-                    }
-                }
-            }
-            Category::Constants => {
-                match self.binding {
-                    Some(ref bind) => Ok(Some(Box::new(Number::new((bind.0.function)(&[])?)))),
-                    None => {
-                        return_error!(ErrorType::InternalError, "Syntax rule '{}' is of functional type but has no function binding set {}", token, self.category);
-                    }
-                }
-            }
-            // Rules that produce an Expression of type Number
-            Category::Literals => match token.parse::<T>() {
-                Ok(value) => Ok(Some(Box::new(Number::new(value)))),
-                Err(_) => {
-                    return_error!(
-                        ErrorType::SyntaxError,
-                        "Could not parse literal '{}' as a number",
-                        token
-                    );
-                }
-            },
-            // Rules that produce an Expression of type Variable
-            Category::Variables => Ok(Some(Box::new(Variable::new(
-                token,
-                <Variable<T> as Expression>::ExprType::from(0.0).unwrap(),
-            )))),
-            // Rules that do not correspond to an Expression
-            _ => {
-                Ok(None)
-                //return_error!(ErrorType::InternalError, "Attempted to get expression for syntax rule '{}' with expressionless category {}", token, self.category);
-            }
-        }
     }
 }

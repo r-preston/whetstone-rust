@@ -24,10 +24,13 @@ pub struct Equation<T: NumericType> {
 }
 
 impl<T: NumericType> Equation<T> {
-    pub(crate) fn new(data: Vec<Box<dyn Expression<ExprType = T>>>) -> Equation<T> {
+    pub(crate) fn new(
+        data: Vec<Box<dyn Expression<ExprType = T>>>,
+        variables: HashMap<String, Rc<Cell<T>>>,
+    ) -> Equation<T> {
         Equation {
-            data: data,
-            variables: HashMap::new(),
+            data,
+            variables,
             phantom: PhantomData,
         }
     }
@@ -51,6 +54,7 @@ impl<T: NumericType> Equation<T> {
         match self.variables.get(label) {
             Some(value_cell) => {
                 value_cell.replace(value);
+
                 return Ok(value_cell.get());
             }
             None => {

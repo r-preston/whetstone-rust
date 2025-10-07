@@ -1,11 +1,15 @@
 pub mod bindings;
 pub mod ruleset;
 
+use std::cell::Cell;
+use std::collections::HashMap;
+use std::rc::Rc;
+
 use crate::equation::Equation;
-use crate::expressions::Expression;
 use crate::parser::ruleset::rule::{Category, Rule};
 use crate::{
     error::{return_error, Error, ErrorType},
+    expressions::{number::Number, variable::Variable, Expression},
     NumericType,
 };
 use ruleset::Ruleset;
@@ -60,6 +64,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
             syntax_error!("Equation string should not be empty");
         }
 
+        let mut variables: HashMap<String, Rc<Cell<T>>> = HashMap::new();
         let mut expressions: Vec<Box<dyn Expression<ExprType = T>>> = Vec::new();
         let mut operator_stack: Vec<(Box<Rule<T>>, Option<Box<dyn Expression<ExprType = T>>>)> =
             Vec::new();
@@ -99,7 +104,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
              *        if there is a function token at the top of the operator stack, then:
              *            pop the function from the operator stack into the output queue
              */
-            let expression = rule.expression(&matched_str)?;
+            let expression = self.create_expression(&rule, &matched_str, &mut variables)?;
             match rule.category() {
                 Category::Literals | Category::Constants | Category::Variables => {
                     expressions.push(expression.unwrap())
@@ -200,7 +205,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
             }
         }
 
-        Ok(Equation::new(expressions))
+        Ok(Equation::new(expressions, variables))
     }
 
     fn match_next_token(
@@ -304,5 +309,64 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         }
 
         syntax_error!("'{}' does not match any registered rule", equation_string);
+    }
+
+    fn create_expression(
+        &self,
+        rule: &Rule<T>,
+        token: &str,
+        variables: &mut HashMap<String, Rc<Cell<T>>>,
+    ) -> Result<Option<Box<dyn Expression<ExprType = T>>>, Error> {
+        match rule.category() {
+            // Rules that produce an Expression of type Function
+            Category::Operators | Category::Functions => {
+                match rule.binding() {
+                    Some(ref bind) => Ok(Some(Box::new(bind.0.clone()))),
+                    None => {
+                        return_error!(ErrorType::InternalError, "Syntax rule '{}' is of functional type but has no function binding set {}", token, rule.category());
+                    }
+                }
+            }
+            Category::Constants => {
+                match rule.binding() {
+                    Some(ref bind) => Ok(Some(Box::new(Number::new((bind.0.function)(&[])?)))),
+                    None => {
+                        return_error!(ErrorType::InternalError, "Syntax rule '{}' is of functional type but has no function binding set {}", token, rule.category());
+                    }
+                }
+            }
+            // Rules that produce an Expression of type Number
+            Category::Literals => match token.parse::<T>() {
+                Ok(value) => Ok(Some(Box::new(Number::new(value)))),
+                Err(_) => {
+                    return_error!(
+                        ErrorType::SyntaxError,
+                        "Could not parse literal '{}' as a number",
+                        token
+                    );
+                }
+            },
+            // Rules that produce an Expression of type Variable
+            Category::Variables => {
+                if !variables.contains_key(token) {
+                    variables.insert(
+                        token.to_string(),
+                        Rc::new(Cell::new(
+                            <Variable<T> as Expression>::ExprType::from(0.0).unwrap(),
+                        )),
+                    );
+                }
+
+                Ok(Some(Box::new(Variable::new(
+                    token,
+                    variables.get(token).unwrap(),
+                ))))
+            }
+            // Rules that do not correspond to an Expression
+            _ => {
+                Ok(None)
+                //return_error!(ErrorType::InternalError, "Attempted to get expression for syntax rule '{}' with expressionless category {}", token, self.category);
+            }
+        }
     }
 }
