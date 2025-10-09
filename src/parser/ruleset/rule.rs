@@ -84,12 +84,16 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         binding: fn(&[T]) -> Value<T>,
         follows: Vec<Category>,
         num_arguments: usize,
+        label: &str,
     ) -> Rule<T> {
         Rule {
             pattern,
             precedence,
             category,
-            binding: (Some((Function::new(binding, num_arguments), associativity))),
+            binding: (Some((
+                Function::new(binding, num_arguments, label.to_string()),
+                associativity,
+            ))),
             follows,
             phantom: PhantomData::<T>,
         }

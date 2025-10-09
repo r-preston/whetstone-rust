@@ -9,10 +9,6 @@ impl<T: NumericType> Number<T> {
     pub fn new(value: T) -> Number<T> {
         Number::<T> { value }
     }
-
-    pub fn value(&self) -> &T {
-        &self.value
-    }
 }
 
 impl<T: NumericType> Expression for Number<T> {
@@ -24,5 +20,11 @@ impl<T: NumericType> Expression for Number<T> {
 
     fn num_inputs(&self) -> usize {
         0
+    }
+}
+
+impl<T: NumericType> std::fmt::Display for Number<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Number[{}]", self.value)
     }
 }

@@ -1,4 +1,3 @@
-use core::slice::Iter;
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -39,15 +38,34 @@ impl<T: NumericType> Equation<T> {
         if self.data.is_empty() {
             return_error!(ErrorType::NotInitialisedError, "Equation is empty");
         }
+        // set variables
         for &(label, value) in variables.iter() {
             self.set_variable(label, value)?;
         }
-        self.evaluate_equation(&mut self.data.iter())
-    }
 
-    pub(crate) fn add_variable(&mut self, label: &str) {
-        self.variables
-            .insert(label.to_string(), Rc::new(Cell::new(T::from(0.0).unwrap())));
+        let mut output_stack = Vec::new();
+
+        for expression in &self.data {
+            if expression.num_inputs() > output_stack.len() {
+                return_error!(
+                ErrorType::SyntaxError,
+                "Function {} requires {} inputs but the output stack contains {}",
+                expression, expression.num_inputs(), output_stack.len()
+
+            );
+            }
+            let input_values = output_stack.split_off(output_stack.len() - expression.num_inputs());
+            output_stack.push(expression.evaluate(input_values.as_slice())?);
+        }
+
+        if output_stack.len() != 1 {
+            return_error!(
+                ErrorType::SyntaxError,
+                "Equation does not evaluate to a single value"
+            );
+        }
+
+        return Ok(output_stack[0]);
     }
 
     pub fn set_variable(&self, label: &str, value: T) -> Value<T> {
@@ -66,25 +84,7 @@ impl<T: NumericType> Equation<T> {
         }
     }
 
-    pub(crate) fn variables(&self) -> Vec<String> {
+    pub fn variables(&self) -> Vec<String> {
         self.variables.keys().cloned().collect()
-    }
-
-    fn evaluate_equation(&self, iter: &mut Iter<Box<dyn Expression<ExprType = T>>>) -> Value<T> {
-        let expression = match iter.next() {
-            Some(expression) => expression,
-            None => {
-                // this shouldn't happen as it implies an expression takes a number of arguments that aren't in the data vec
-                return_error!(
-                    ErrorType::InternalError,
-                    "An unexpected error occured, equation data is internally inconsistent"
-                );
-            }
-        };
-        let mut input_values: Vec<T> = Vec::new();
-        for _ in 0..expression.num_inputs() {
-            input_values.push(self.evaluate_equation(iter)?);
-        }
-        expression.evaluate(input_values.as_slice())
     }
 }

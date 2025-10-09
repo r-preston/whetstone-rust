@@ -86,7 +86,7 @@ macro_rules! register_supported_type {
             fn get_binding(label: &str) -> Option<Function<Self::ExprType>> {
                 let bindings = [<$Type:upper _BINDINGS>].read().unwrap();
                 let binding = bindings.get(label)?;
-                Some(Function::new(binding.0, binding.1))
+                Some(Function::new(binding.0, binding.1, label.to_string()))
             }
         }
 

@@ -143,6 +143,7 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
                             binding.function,
                             follows,
                             binding.num_inputs,
+                            &binding.label
                         )
                     }
                 }));

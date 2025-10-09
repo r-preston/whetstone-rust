@@ -1,9 +1,9 @@
-#![allow(dead_code)]
-
 mod equation;
 mod error;
 mod expressions;
 mod parser;
+
+use std::fmt::Display;
 
 /*
  * A factory structure that generates Equations by parsing strings
@@ -20,6 +20,6 @@ pub use error::{Error, ErrorType};
 
 // define constraint for the type of value used by an Equation
 pub trait NumericType:
-    num_traits::float::Float + bindings::FunctionBindings + std::str::FromStr
+    num_traits::float::Float + bindings::FunctionBindings + std::str::FromStr + Display
 {
 }

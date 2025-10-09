@@ -28,7 +28,6 @@ pub enum Syntax {
 }
 
 pub struct Parser<T: NumericType> {
-    syntax: Syntax,
     syntax_rules: Ruleset<T>,
 }
 
@@ -52,7 +51,6 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         // load and validate rules from file
         match Ruleset::load_ruleset(&rule_file) {
             Ok(syntax_rules) => Ok(Parser::<T> {
-                syntax,
                 syntax_rules,
             }),
             Err(message) => Err(message),
@@ -105,6 +103,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
              *            pop the function from the operator stack into the output queue
              */
             let expression = self.create_expression(&rule, &matched_str, &mut variables)?;
+            
             match rule.category() {
                 Category::Literals | Category::Constants | Category::Variables => {
                     expressions.push(expression.unwrap())
@@ -187,21 +186,20 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                     }
                 }
             }
-            /*
-             *   // After the while loop, pop the remaining items from the operator stack into the output queue.
-             *   while there are tokens on the operator stack:
-             *       // If the operator token on the top of the stack is a parenthesis, then there are mismatched parentheses.
-             *       {assert the operator on top of the stack is not a (left) parenthesis}
-             *       pop the operator from the operator stack onto the output queue
-             */
-            while !operator_stack.is_empty() {
-                let (rule, expression) = operator_stack.pop().unwrap();
-                if rule.category() == Category::OpenBrackets {
-                    syntax_error!("Mismatched bracket")
-                }
-                if expression.is_some() {
-                    expressions.push(expression.unwrap());
-                }
+        } /*
+           *   // After the while loop, pop the remaining items from the operator stack into the output queue.
+           *   while there are tokens on the operator stack:
+           *       // If the operator token on the top of the stack is a parenthesis, then there are mismatched parentheses.
+           *       {assert the operator on top of the stack is not a (left) parenthesis}
+           *       pop the operator from the operator stack onto the output queue
+           */
+        while !operator_stack.is_empty() {
+            let (rule, expression) = operator_stack.pop().unwrap();
+            if rule.category() == Category::OpenBrackets {
+                syntax_error!("Mismatched bracket")
+            }
+            if expression.is_some() {
+                expressions.push(expression.unwrap());
             }
         }
 
@@ -319,7 +317,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
     ) -> Result<Option<Box<dyn Expression<ExprType = T>>>, Error> {
         match rule.category() {
             // Rules that produce an Expression of type Function
-            Category::Operators | Category::Functions => {
+            Category::ImplicitOperators | Category::Operators | Category::Functions => {
                 match rule.binding() {
                     Some(ref bind) => Ok(Some(Box::new(bind.0.clone()))),
                     None => {
@@ -363,10 +361,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
                 ))))
             }
             // Rules that do not correspond to an Expression
-            _ => {
-                Ok(None)
-                //return_error!(ErrorType::InternalError, "Attempted to get expression for syntax rule '{}' with expressionless category {}", token, self.category);
-            }
+            Category::CloseBrackets | Category::OpenBrackets | Category::Separators => Ok(None),
         }
     }
 }

@@ -4,7 +4,7 @@ pub mod variable;
 
 use crate::equation::Value;
 
-pub trait Expression {
+pub trait Expression: std::fmt::Display {
     type ExprType;
 
     fn evaluate(&self, values: &[Self::ExprType]) -> Value<Self::ExprType>;
