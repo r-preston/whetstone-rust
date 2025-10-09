@@ -13,6 +13,8 @@ serde_with = "1.3.1"
 paste = "1.0.15"
 log = "0.4.27"
 env_logger = "0.11.8"
+eframe = "0.31"
+egui = "0.31.1"
 
 [lib]
 name = "whetstone"
@@ -21,3 +23,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "whetstone-test"
 path = "src/test.rs"
+
+[[bin]]
+name = "whetstone-demo"
+path = "src/demo.rs"

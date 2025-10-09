@@ -17,7 +17,7 @@ fn main() {
         Ok(_) => (),
         Err(e) => panic!("{}", e.message),
     }
-    
+
     let factory = Parser::<f32>::new(Syntax::Standard).unwrap();
     let equation = factory.parse("x-1.3").unwrap();
     let equation2 = factory.parse("x+y").unwrap();

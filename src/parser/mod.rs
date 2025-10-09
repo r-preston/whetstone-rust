@@ -20,7 +20,7 @@ macro_rules! syntax_error {
     };
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum Syntax {
     Standard,
     LaTeX,
@@ -50,9 +50,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
         };
         // load and validate rules from file
         match Ruleset::load_ruleset(&rule_file) {
-            Ok(syntax_rules) => Ok(Parser::<T> {
-                syntax_rules,
-            }),
+            Ok(syntax_rules) => Ok(Parser::<T> { syntax_rules }),
             Err(message) => Err(message),
         }
     }
@@ -103,7 +101,7 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
              *            pop the function from the operator stack into the output queue
              */
             let expression = self.create_expression(&rule, &matched_str, &mut variables)?;
-            
+
             match rule.category() {
                 Category::Literals | Category::Constants | Category::Variables => {
                     expressions.push(expression.unwrap())

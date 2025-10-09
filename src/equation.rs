@@ -48,11 +48,12 @@ impl<T: NumericType> Equation<T> {
         for expression in &self.data {
             if expression.num_inputs() > output_stack.len() {
                 return_error!(
-                ErrorType::SyntaxError,
-                "Function {} requires {} inputs but the output stack contains {}",
-                expression, expression.num_inputs(), output_stack.len()
-
-            );
+                    ErrorType::SyntaxError,
+                    "Function {} requires {} inputs but the output stack contains {}",
+                    expression,
+                    expression.num_inputs(),
+                    output_stack.len()
+                );
             }
             let input_values = output_stack.split_off(output_stack.len() - expression.num_inputs());
             output_stack.push(expression.evaluate(input_values.as_slice())?);
