@@ -31,6 +31,6 @@ impl<T: NumericType> Expression for Variable<T> {
 
 impl<T: NumericType> std::fmt::Display for Variable<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Variable[{}({})]", self.label, self.value.get())
+        write!(f, "{}", self.label)
     }
 }

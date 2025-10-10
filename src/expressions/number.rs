@@ -25,6 +25,6 @@ impl<T: NumericType> Expression for Number<T> {
 
 impl<T: NumericType> std::fmt::Display for Number<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Number[{}]", self.value)
+        write!(f, "{}", self.value)
     }
 }

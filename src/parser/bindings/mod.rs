@@ -8,7 +8,7 @@ use crate::expressions::function::Function;
 pub use crate::expressions::function::FunctionPointer;
 use crate::NumericType;
 
-type BindingMap<T> = HashMap<&'static str, (FunctionPointer<T>, usize)>;
+type BindingMap<T> = HashMap<&'static str, Function<T>>;
 
 pub trait FunctionBindings {
     type ExprType: NumericType;
@@ -60,7 +60,7 @@ macro_rules! register_supported_type {
                                 label, std::any::type_name::<$Type>()
                             );
                         },
-                        None => { map.insert(label, (*func, *arg_count)); }
+                        None => { map.insert(label, Function::new(label, func, *arg_count)); }
                     }
                 }
                 map
@@ -70,7 +70,7 @@ macro_rules! register_supported_type {
                 let mut binding_map = [<$Type:upper _BINDINGS>].write().unwrap();
                 for (label, func, arg_count) in bindings {
                     match binding_map.contains_key(label) {
-                        false => { binding_map.insert(label, (*func, *arg_count)); },
+                        false => { binding_map.insert(label, Function::new(label, func, *arg_count)); },
                         true => {
                             return_error!(
                                 ErrorType::BindingError,
@@ -86,7 +86,7 @@ macro_rules! register_supported_type {
             fn get_binding(label: &str) -> Option<Function<Self::ExprType>> {
                 let bindings = [<$Type:upper _BINDINGS>].read().unwrap();
                 let binding = bindings.get(label)?;
-                Some(Function::new(binding.0, binding.1, label.to_string()))
+                Some(binding.clone())
             }
         }
 

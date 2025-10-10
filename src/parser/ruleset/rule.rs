@@ -1,4 +1,4 @@
-use crate::{equation::Value, expressions::function::Function, NumericType};
+use crate::{expressions::function::Function, NumericType};
 use regex::{Captures, Regex};
 use serde::Deserialize;
 
@@ -60,7 +60,7 @@ pub(crate) struct Rule<T: NumericType> {
     follows: Vec<Category>,
 }
 
-impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
+impl<T: NumericType> Rule<T> {
     pub fn new_non_expression_rule(
         pattern: Regex,
         category: Category,
@@ -81,17 +81,15 @@ impl<T: NumericType + std::str::FromStr + 'static> Rule<T> {
         precedence: u32,
         category: Category,
         associativity: Associativity,
-        binding: fn(&[T]) -> Value<T>,
+        binding: Function<T>,
         follows: Vec<Category>,
-        num_arguments: usize,
-        label: &str,
     ) -> Rule<T> {
         Rule {
             pattern,
             precedence,
             category,
             binding: (Some((
-                Function::new(binding, num_arguments, label.to_string()),
+                binding,
                 associativity,
             ))),
             follows,

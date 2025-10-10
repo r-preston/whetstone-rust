@@ -1,26 +1,26 @@
 use super::Expression;
 use crate::{
-    equation::Value,
-    error::{return_error, Error, ErrorType},
-    NumericType,
+    equation::Value, error::{return_error, Error, ErrorType}, NumericType
 };
 
 pub type FunctionPointer<T> = fn(&[T]) -> Value<T>;
 
-pub struct Function<T> {
-    pub label: String,
-    pub function: FunctionPointer<T>,
+pub struct Function<T: 'static> {
+    pub label: &'static str,
+    pub function: &'static FunctionPointer<T>,
     pub num_inputs: usize,
 }
 
 impl<T: NumericType> Clone for Function<T> {
     fn clone(&self) -> Self {
-        Function::<T>::new(self.function, self.num_inputs, self.label.clone())
+        Function::<T>::new(self.label, self.function, self.num_inputs)
     }
 }
 
 impl<T: NumericType> Function<T> {
-    pub fn new(function: FunctionPointer<T>, num_inputs: usize, label: String) -> Function<T> {
+    pub fn new(label: &'static str,
+    function: &'static FunctionPointer<T>,
+    num_inputs: usize) -> Function<T> {
         Function {
             label,
             function,
@@ -49,6 +49,6 @@ impl<T: NumericType> Expression for Function<T> {
 
 impl<T> std::fmt::Display for Function<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Function[{}({})]", self.label, self.num_inputs)
+        write!(f, "{}({})", self.label, vec!["_"; self.num_inputs].join(", "))
     }
 }

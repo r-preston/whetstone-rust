@@ -31,7 +31,7 @@ pub struct Parser<T: NumericType> {
     syntax_rules: Ruleset<T>,
 }
 
-impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
+impl<T: NumericType<ExprType = T>> Parser<T> {
     pub fn new(syntax: Syntax) -> Result<Parser<T>, Error> {
         // get json file containing rule definitions
         let rule_file: &str = match syntax {
@@ -71,6 +71,9 @@ impl<T: NumericType<ExprType = T> + 'static> Parser<T> {
             let (rule, matched_str, remaining_str) =
                 self.match_next_token(&remainder, &last_token)?;
             remainder = remaining_str.trim().to_string();
+            if remainder.is_empty() && !rule.allowed_at_end() {
+                syntax_error!("{} may not appear at the end of an expression", rule.category())
+            }
             last_token = Some(rule.category());
             /*
              * if the token is:

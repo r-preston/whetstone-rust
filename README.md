@@ -1,5 +1,5 @@
-# whetstone-rust
-Library for parsing and evaluating strings representing equations
+# Whetstone
+Flexible crate for parsing and evaluating strings representing equations
 
 ## Features
 
@@ -11,7 +11,6 @@ Library for parsing and evaluating strings representing equations
 - Create custom syntax with JSON
 ### Common and LaTeX syntax built-in 
 
-## To do
-- Minimise function expression footprint while including label
+## Roadmap
 - Improve error messages, including position error occurred
 - Add support for integration and summation functions

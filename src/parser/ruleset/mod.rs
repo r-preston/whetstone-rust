@@ -52,7 +52,7 @@ pub fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
     }
 }
 
-impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
+impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
     pub fn load_ruleset(path: &str) -> Result<Ruleset<T>, Error> {
         if !fs::exists(path).unwrap_or(false) {
             return_error!(ErrorType::FileNotFoundError, "Could not find '{path}'");
@@ -140,10 +140,8 @@ impl<T: NumericType<ExprType = T> + FunctionBindings + 'static> Ruleset<T> {
                             precedence,
                             category.clone(),
                             associativity,
-                            binding.function,
+                            binding,
                             follows,
-                            binding.num_inputs,
-                            &binding.label
                         )
                     }
                 }));

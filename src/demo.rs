@@ -6,7 +6,7 @@ use whetstone::{Equation, Parser, Syntax};
 static X_MIN: f32 = -10.0;
 static X_MAX: f32 = 10.0;
 static RANGE: f32 = X_MAX - X_MIN;
-static INTERVALS: usize = 100;
+static INTERVALS: usize = 500;
 static STEP: f32 = RANGE / (INTERVALS as f32);
 
 fn main() -> eframe::Result {
@@ -43,6 +43,7 @@ pub struct DemoApp {
     syntax: Syntax,
     error: Option<String>,
     x_coords: Vec<f32>,
+    y_coords: Vec<f32>,
     equation_factory: Parser<f32>,
 }
 
@@ -53,6 +54,7 @@ impl DemoApp {
         for i in 0..=INTERVALS {
             x_coords.push(X_MIN + (i as f32) * STEP);
         }
+        let y_coords = x_coords.clone();
         let equation_factory = Parser::<f32>::new(Syntax::Standard).unwrap();
         let equation_str = "x";
         Self {
@@ -60,6 +62,7 @@ impl DemoApp {
             equation: equation_factory.parse(equation_str).unwrap(),
             syntax: Syntax::Standard,
             x_coords,
+            y_coords,
             equation_factory: Parser::<f32>::new(Syntax::Standard).unwrap(),
             error: None,
         }
@@ -136,18 +139,17 @@ impl eframe::App for DemoApp {
                 canvas.draw_grid_lines();
                 canvas.draw_axes();
 
-                let mut points = self.x_coords.clone();
-                for point in &mut points {
+                for (i, point) in self.y_coords.iter_mut().enumerate() {
                     *point =
                         self.equation
-                            .evaluate(&[("x", *point)])
+                            .evaluate(&[("x", self.x_coords[i])])
                             .unwrap_or_else(|err| -> f32 {
                                 self.error = Some(err.message);
                                 return 0.0;
                             });
                 }
 
-                canvas.draw_points(&self.x_coords, &points, &Color32::from_rgb(255, 50, 50));
+                canvas.draw_points(&self.x_coords, &self.y_coords, &Color32::from_rgb(255, 50, 50));
             })
             .response;
     }
