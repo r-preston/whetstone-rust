@@ -1,41 +1,20 @@
-pub mod rule;
+pub(crate) mod rule;
 
 use super::Syntax;
+use super::{Associativity, Category};
 use crate::{
+    bindings::FunctionBindings,
     error::{return_error, Error, ErrorType},
     expressions::function::Function,
-    parser::bindings::FunctionBindings,
+    syntax::RuleCollectionDefinition,
     NumericType,
 };
 use regex::Regex;
-use rule::{Associativity, Category, Rule};
-use serde::Deserialize;
-use std::{collections::HashMap, fs};
+use rule::Rule;
+
+use std::fs;
 
 pub(crate) struct Ruleset<T: NumericType>(Vec<Box<Rule<T>>>);
-
-#[derive(Deserialize)]
-struct RuleJson {
-    pattern: Option<String>,
-    precedence: Option<u32>,
-    associativity: Option<Associativity>,
-    binding: Option<String>,
-    may_follow: Option<Vec<Category>>,
-}
-
-#[derive(Deserialize)]
-struct RuleCategoryJson {
-    default_associativity: Option<Associativity>,
-    default_precedence: Option<u32>,
-    may_follow: Vec<Category>,
-    rules: Vec<RuleJson>,
-}
-
-#[derive(Deserialize)]
-struct RuleFileJson(
-    #[serde(with = "::serde_with::rust::maps_duplicate_key_is_error")]
-    HashMap<Category, RuleCategoryJson>,
-);
 
 fn builtin_rulesets() -> &'static [(Syntax, &'static str)] {
     &[
@@ -44,7 +23,7 @@ fn builtin_rulesets() -> &'static [(Syntax, &'static str)] {
     ]
 }
 
-pub fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
+pub(crate) fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
     let builtins = builtin_rulesets();
     match builtins.iter().position(|x| x.0 == *syntax) {
         Some(index) => Some(builtins[index].1),
@@ -65,7 +44,8 @@ impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
             }
         };
 
-        let rule_definitions = match serde_json::from_str::<RuleFileJson>(&json_string) {
+        let rule_definitions = match serde_json::from_str::<RuleCollectionDefinition>(&json_string)
+        {
             Ok(deserialized) => deserialized,
             Err(e) => return_error!(
                 ErrorType::RuleParseError,

@@ -1,16 +1,16 @@
+pub mod bindings;
 mod equation;
 mod error;
 mod expressions;
 mod parser;
+pub mod syntax;
 
 use std::fmt::Display;
 
 /*
  * A factory structure that generates Equations by parsing strings
  */
-pub use expressions::function::FunctionPointer;
-pub use parser::bindings;
-pub use parser::{Parser, Syntax};
+pub use parser::Parser;
 /*
  * A structure representing a mathematical function of a number of variables
  */

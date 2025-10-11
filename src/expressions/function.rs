@@ -1,6 +1,8 @@
 use super::Expression;
 use crate::{
-    equation::Value, error::{return_error, Error, ErrorType}, NumericType
+    equation::Value,
+    error::{return_error, Error, ErrorType},
+    NumericType,
 };
 
 pub type FunctionPointer<T> = fn(&[T]) -> Value<T>;
@@ -18,9 +20,11 @@ impl<T: NumericType> Clone for Function<T> {
 }
 
 impl<T: NumericType> Function<T> {
-    pub fn new(label: &'static str,
-    function: &'static FunctionPointer<T>,
-    num_inputs: usize) -> Function<T> {
+    pub fn new(
+        label: &'static str,
+        function: &'static FunctionPointer<T>,
+        num_inputs: usize,
+    ) -> Function<T> {
         Function {
             label,
             function,
@@ -49,6 +53,11 @@ impl<T: NumericType> Expression for Function<T> {
 
 impl<T> std::fmt::Display for Function<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}({})", self.label, vec!["_"; self.num_inputs].join(", "))
+        write!(
+            f,
+            "{}({})",
+            self.label,
+            vec!["_"; self.num_inputs].join(", ")
+        )
     }
 }

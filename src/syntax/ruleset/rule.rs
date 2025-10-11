@@ -1,54 +1,6 @@
+use crate::syntax::{Associativity, Category};
 use crate::{expressions::function::Function, NumericType};
 use regex::{Captures, Regex};
-use serde::Deserialize;
-
-use std::{fmt, marker::PhantomData};
-
-/// The type of expression a Rule represents
-#[derive(PartialEq, Copy, Clone, Eq, Hash, Deserialize)]
-pub(crate) enum Category {
-    /// an operation on two values, e.g. +, *, ^
-    Operators,
-    /// an operation on two values, e.g. +, *, ^ that matches no characters and is implied by context
-    ImplicitOperators,
-    /// a function of 1 or more arguments, e.g. sin, ln
-    Functions,
-    /// a number such as 2, -0.5 etc
-    Literals,
-    /// mathematical constant such as pi or e
-    Constants,
-    /// placeholder for a value that can be changed for each evaluation
-    Variables,
-    /// opening parenthesis
-    OpenBrackets,
-    /// closing parenthesis
-    CloseBrackets,
-    /// tokens that are required by the syntax but have no direct affect, for example the separator between function arguments
-    Separators,
-}
-
-impl fmt::Display for Category {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Operators => write!(f, "Operators"),
-            Self::ImplicitOperators => write!(f, "Implicit Operators"),
-            Self::Functions => write!(f, "Functions"),
-            Self::Literals => write!(f, "Literals"),
-            Self::Constants => write!(f, "Constants"),
-            Self::Variables => write!(f, "Variables"),
-            Self::OpenBrackets => write!(f, "OpenBrackets"),
-            Self::CloseBrackets => write!(f, "CloseBrackets"),
-            Self::Separators => write!(f, "Separators"),
-        }
-    }
-}
-
-/// The order in which operations with equal precedence should be resolved
-#[derive(Copy, Clone, Deserialize, PartialEq)]
-pub(crate) enum Associativity {
-    LeftToRight,
-    RightToLeft,
-}
 
 #[derive(Clone)]
 pub(crate) struct Rule<T: NumericType> {
@@ -56,7 +8,7 @@ pub(crate) struct Rule<T: NumericType> {
     precedence: u32,
     category: Category,
     binding: Option<(Function<T>, Associativity)>,
-    phantom: PhantomData<T>,
+    //phantom: PhantomData<T>,
     follows: Vec<Category>,
 }
 
@@ -72,7 +24,6 @@ impl<T: NumericType> Rule<T> {
             category,
             binding: None,
             follows,
-            phantom: PhantomData::<T>,
         }
     }
 
@@ -88,12 +39,8 @@ impl<T: NumericType> Rule<T> {
             pattern,
             precedence,
             category,
-            binding: (Some((
-                binding,
-                associativity,
-            ))),
+            binding: (Some((binding, associativity))),
             follows,
-            phantom: PhantomData::<T>,
         }
     }
 
@@ -104,7 +51,6 @@ impl<T: NumericType> Rule<T> {
             category: Category::Literals,
             binding: None,
             follows,
-            phantom: PhantomData::<T>,
         }
     }
 
@@ -115,7 +61,6 @@ impl<T: NumericType> Rule<T> {
             category: Category::Variables,
             binding: None,
             follows,
-            phantom: PhantomData::<T>,
         }
     }
 

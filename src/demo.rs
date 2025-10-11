@@ -1,7 +1,7 @@
 extern crate whetstone;
 
 use egui::{vec2, Color32, Pos2, Rangef, Rect, Response, Stroke, Style, Ui, Vec2, Visuals};
-use whetstone::{Equation, Parser, Syntax};
+use whetstone::{syntax::Syntax, Equation, Parser};
 
 static X_MIN: f32 = -10.0;
 static X_MAX: f32 = 10.0;
@@ -140,16 +140,20 @@ impl eframe::App for DemoApp {
                 canvas.draw_axes();
 
                 for (i, point) in self.y_coords.iter_mut().enumerate() {
-                    *point =
-                        self.equation
-                            .evaluate(&[("x", self.x_coords[i])])
-                            .unwrap_or_else(|err| -> f32 {
-                                self.error = Some(err.message);
-                                return 0.0;
-                            });
+                    *point = self
+                        .equation
+                        .evaluate(&[("x", self.x_coords[i])])
+                        .unwrap_or_else(|err| -> f32 {
+                            self.error = Some(err.message);
+                            return 0.0;
+                        });
                 }
 
-                canvas.draw_points(&self.x_coords, &self.y_coords, &Color32::from_rgb(255, 50, 50));
+                canvas.draw_points(
+                    &self.x_coords,
+                    &self.y_coords,
+                    &Color32::from_rgb(255, 50, 50),
+                );
             })
             .response;
     }

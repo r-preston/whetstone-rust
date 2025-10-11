@@ -2,13 +2,13 @@
 
 extern crate whetstone;
 
-use whetstone::{bindings, NumericType, Parser, Syntax, Value};
+use whetstone::syntax::Syntax;
+use whetstone::{bindings, bindings::FunctionPointer, NumericType, Parser, Value};
 
 pub fn custom_add<T: NumericType>(args: &[T]) -> Value<T> {
     Ok(args[0] + args[1])
 }
-static MY_FUNCTIONS: &[(&str, bindings::FunctionPointer<f32>, usize)] =
-    &[("CustomAdd", custom_add, 2)];
+static MY_FUNCTIONS: &[(&str, FunctionPointer<f32>, usize)] = &[("CustomAdd", custom_add, 2)];
 
 fn main() {
     env_logger::init();
@@ -17,6 +17,11 @@ fn main() {
         Ok(_) => (),
         Err(e) => panic!("{}", e.message),
     }
+
+    //bindings::get_bindings::<f32>();
+
+    //syntax::copy_syntax
+    //syntax::
 
     let factory = Parser::<f32>::new(Syntax::Standard).unwrap();
     let equation = factory.parse("x-1.3").unwrap();

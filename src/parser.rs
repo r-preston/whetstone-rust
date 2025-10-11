@@ -1,30 +1,21 @@
-pub mod bindings;
-pub mod ruleset;
-
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::equation::Equation;
-use crate::parser::ruleset::rule::{Category, Rule};
+use crate::syntax::ruleset::get_builtin_ruleset;
+use crate::syntax::ruleset::{rule::Rule, Ruleset};
+use crate::syntax::{Category, Syntax};
 use crate::{
     error::{return_error, Error, ErrorType},
     expressions::{number::Number, variable::Variable, Expression},
     NumericType,
 };
-use ruleset::Ruleset;
 
 macro_rules! syntax_error {
     ($($t:tt)*) => {
         return_error!(ErrorType::SyntaxError, $($t)*)
     };
-}
-
-#[derive(PartialEq, Clone)]
-pub enum Syntax {
-    Standard,
-    LaTeX,
-    Custom(String),
 }
 
 pub struct Parser<T: NumericType> {
@@ -38,7 +29,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             // if user provides custom rules file
             Syntax::Custom(ref file) => file,
             // user chooses a built-in ruleset
-            ref builtin => match ruleset::get_builtin_ruleset(&builtin) {
+            ref builtin => match get_builtin_ruleset(&builtin) {
                 Some(ruleset) => ruleset,
                 None => {
                     return_error!(
@@ -72,7 +63,10 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                 self.match_next_token(&remainder, &last_token)?;
             remainder = remaining_str.trim().to_string();
             if remainder.is_empty() && !rule.allowed_at_end() {
-                syntax_error!("{} may not appear at the end of an expression", rule.category())
+                syntax_error!(
+                    "{} may not appear at the end of an expression",
+                    rule.category()
+                )
             }
             last_token = Some(rule.category());
             /*

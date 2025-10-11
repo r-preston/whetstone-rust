@@ -16,7 +16,7 @@ Variable is only required category and must contain exactly one rule
 ## Labels
 
 Must be unique
-Custom bindings can be passed to Parser::new
+Custom bindings can be passed to new
 
 ```json
 [

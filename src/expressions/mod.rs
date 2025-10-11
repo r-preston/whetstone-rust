@@ -1,6 +1,6 @@
-pub mod function;
-pub mod number;
-pub mod variable;
+pub(crate) mod function;
+pub(crate) mod number;
+pub(crate) mod variable;
 
 use crate::equation::Value;
 
