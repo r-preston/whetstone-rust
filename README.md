@@ -11,6 +11,11 @@ Flexible crate for parsing and evaluating strings representing equations
 - Create custom syntax with JSON
 ### Common and LaTeX syntax built-in 
 
+## To do
+- bracket style matching context
+- case sensitivity
+- documentation
+
 ## Roadmap
 - Improve error messages, including position error occurred
 - Support for wrapping operators like |...| 

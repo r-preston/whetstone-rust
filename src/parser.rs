@@ -206,7 +206,16 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             }
         }
 
-        Ok(Equation::new(expressions, variables))
+        let equation = Equation::new(expressions, variables);
+
+        // run through equation to check for any syntax errors that were not caught by the rules
+        match equation.evaluate(&[]) {
+            Ok(_) => Ok(equation),
+            Err(e) => match e.error_type {
+                ErrorType::SyntaxError => Err(e),
+                _ => Ok(equation),
+            },
+        }
     }
 
     fn match_next_token(

@@ -37,11 +37,32 @@ macro_rules! register_supported_type {
 
         static [<$Type:upper _DEFINITIONS>]: &[(&'static str, FunctionPointer<$Type>, usize)] = &[
 
+            ("Pi", definitions::pi, 0),
+            ("Euler", definitions::euler, 0),
             ("Add", definitions::add, 2),
             ("Subtract", definitions::subtract, 2),
             ("Multiply", definitions::multiply, 2),
             ("Divide", definitions::divide, 2),
             ("Exponent", definitions::exponent, 2),
+            ("Negate", definitions::negate, 1),
+            ("SquareRoot", definitions::sqrt, 1),
+            ("Sine", definitions::sine, 1),
+            ("Cosine", definitions::cosine, 1),
+            ("Tangent", definitions::tangent, 1),
+            ("Arcsine", definitions::inverse_sine, 1),
+            ("Arccosine", definitions::inverse_cosine, 1),
+            ("Arctangent", definitions::inverse_tangent, 1),
+            ("HypSine", definitions::hyperbolic_sine, 1),
+            ("HypCosine", definitions::hyperbolic_cosine, 1),
+            ("HypTangent", definitions::hyperbolic_tangent, 1),
+            ("InvHypSine", definitions::inverse_hyperbolic_sine, 1),
+            ("InvHypCosine", definitions::inverse_hyperbolic_cosine, 1),
+            ("InvHypTangent", definitions::inverse_hyperbolic_tangent, 1),
+            ("Cosecant", definitions::cosecant, 1),
+            ("Secant", definitions::secant, 1),
+            ("Cotangent", definitions::cotangent, 1),
+            ("LogBaseE", definitions::log, 1),
+            ("LogBase10", definitions::log10, 1),
 
         ];
 

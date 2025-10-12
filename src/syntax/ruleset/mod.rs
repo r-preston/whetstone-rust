@@ -73,7 +73,10 @@ impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
                             Some(n) => n,
                             None => match rule_def.precedence {
                                 Some(n) => n,
-                                None => {return_error!(ErrorType::RuleParseError, "Field 'precedence' is required for Operator and Function rules")}
+                                None => match category {
+                                    Category::Operators | Category::ImplicitOperators => {return_error!(ErrorType::RuleParseError, "Field 'precedence' is required for Operator rules")}
+                                    _ => 0,
+                                }
                             }
                         };
                         Rule::new_function_rule(

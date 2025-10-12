@@ -1,6 +1,6 @@
 {
     "Operators": {
-        "may_follow": ["Literals", "Variables"],
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
         "rules": [
             {
                 "pattern": "\\+",
@@ -31,7 +31,7 @@
         ]
     },
     "ImplicitOperators": {
-        "may_follow": ["Literals", "Variables"],
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
         "rules": [
             {
                 "binding": "Multiply",
@@ -39,8 +39,93 @@
             }
         ]
     },
+    "Functions": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "-",
+                "binding": "Negate"
+            },
+            {
+                "pattern": "sqrt",
+                "binding": "SquareRoot"
+            },
+            {
+                "pattern": "sin",
+                "binding": "Sine"
+            },
+            {
+                "pattern": "cos",
+                "binding": "Cosine"
+            },
+            {
+                "pattern": "tan",
+                "binding": "Tangent"
+            },
+            {
+                "pattern": "asin",
+                "binding": "Arcsine"
+            },
+            {
+                "pattern": "acos",
+                "binding": "Arccosine"
+            },
+            {
+                "pattern": "atan",
+                "binding": "Arctangent"
+            },
+            {
+                "pattern": "sinh",
+                "binding": "HypSine"
+            },
+            {
+                "pattern": "cosh",
+                "binding": "HypCosine"
+            },
+            {
+                "pattern": "tanh",
+                "binding": "HypTangent"
+            },
+            {
+                "pattern": "arsinh",
+                "binding": "InvHypSine"
+            },
+            {
+                "pattern": "arcosh",
+                "binding": "InvHypCosine"
+            },
+            {
+                "pattern": "artanh",
+                "binding": "InvHypTangent"
+            },
+            {
+                "pattern": "cosec",
+                "binding": "Cosecant"
+            },
+            {
+                "pattern": "sec",
+                "binding": "Secant"
+            },
+            {
+                "pattern": "cot",
+                "binding": "Cotangent"
+            },
+            {
+                "pattern": "log",
+                "binding": "LogBaseE"
+            },
+            {
+                "pattern": "ln",
+                "binding": "LogBaseE"
+            },
+            {
+                "pattern": "log10",
+                "binding": "LogBase10"
+            }
+        ]
+    },
     "Literals": {
-        "may_follow": ["Operators"],
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
                 "pattern": "-?[0-9]+(?:\\.[0-9]+)?"
@@ -48,11 +133,63 @@
         ]
     },
     "Variables": {
-        "may_follow": ["Operators", "ImplicitOperators"],
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
-                "pattern": "[xyz]"
+                "pattern": "[a-zA-Z][a-zA-Z0-9]*"
+            }
+        ]
+    },
+    "Constants": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "pi",
+                "binding": "Pi"
+            },
+            {
+                "pattern": "e",
+                "binding": "Euler"
+            }
+        ]
+    },
+    "OpenBrackets": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "\\("
+            },
+            {
+                "pattern": "\\["
+            },
+            {
+                "pattern": "\\{"
+            }
+        ]
+    },
+    "CloseBrackets": {
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
+        "rules": [
+            {
+                "pattern": "\\)"
+            },
+            {
+                "pattern": "\\]"
+            },
+            {
+                "pattern": "\\}"
+            }
+        ]
+    },
+    "Separators": {
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
+        "rules": [
+            {
+                "pattern": ","
             }
         ]
     }
 }
+
+
+    
