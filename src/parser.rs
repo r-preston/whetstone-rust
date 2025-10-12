@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::equation::Equation;
-use crate::syntax::ruleset::get_builtin_ruleset;
 use crate::syntax::ruleset::{rule::Rule, Ruleset};
-use crate::syntax::{Category, Syntax};
+use crate::syntax::{get_builtin_ruleset, Category, RuleCollectionDefinition, Syntax};
 use crate::{
     error::{return_error, Error, ErrorType},
     expressions::{number::Number, variable::Variable, Expression},
@@ -24,26 +23,35 @@ pub struct Parser<T: NumericType> {
 
 impl<T: NumericType<ExprType = T>> Parser<T> {
     pub fn new(syntax: Syntax) -> Result<Parser<T>, Error> {
-        // get json file containing rule definitions
-        let rule_file: &str = match syntax {
-            // if user provides custom rules file
-            Syntax::Custom(ref file) => file,
-            // user chooses a built-in ruleset
-            ref builtin => match get_builtin_ruleset(&builtin) {
-                Some(ruleset) => ruleset,
-                None => {
-                    return_error!(
-                        ErrorType::InternalError,
-                        "Syntax does not have rules registered"
-                    );
-                }
-            },
+        let json = match get_builtin_ruleset(&syntax) {
+            Some(json) => json,
+            None => {
+                return_error!(
+                    ErrorType::InternalError,
+                    "Syntax has no registered definitions"
+                );
+            }
         };
-        // load and validate rules from file
-        match Ruleset::load_ruleset(&rule_file) {
-            Ok(syntax_rules) => Ok(Parser::<T> { syntax_rules }),
-            Err(message) => Err(message),
-        }
+        Self::from_json(json)
+    }
+
+    pub fn from_json(json: &str) -> Result<Parser<T>, Error> {
+        let rule_definitions = match serde_json::from_str::<RuleCollectionDefinition>(json) {
+            Ok(deserialized) => deserialized,
+            Err(e) => return_error!(
+                ErrorType::RuleParseError,
+                "JSON error in rule definition: {:?}",
+                e
+            ),
+        };
+        Self::from_definitions(rule_definitions)
+    }
+
+    pub fn from_definitions(definitions: RuleCollectionDefinition) -> Result<Parser<T>, Error> {
+        // load and validate rules from definitions
+        Ok(Parser::<T> {
+            syntax_rules: Ruleset::create(definitions)?,
+        })
     }
 
     pub fn parse(&self, equation_string: &str) -> Result<Equation<T>, Error> {

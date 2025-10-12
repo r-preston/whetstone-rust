@@ -7,7 +7,6 @@ use std::{collections::HashMap, fmt};
 pub enum Syntax {
     Standard,
     LaTeX,
-    Custom(String),
 }
 
 /// The type of expression a Rule represents
@@ -39,28 +38,44 @@ pub enum Associativity {
     LeftToRight,
     RightToLeft,
 }
+
 #[derive(Deserialize)]
 pub struct RuleDefinition {
-    pattern: Option<String>,
-    precedence: Option<u32>,
-    associativity: Option<Associativity>,
-    binding: Option<String>,
-    may_follow: Option<Vec<Category>>,
+    pub pattern: Option<String>,
+    pub precedence: Option<u32>,
+    pub associativity: Option<Associativity>,
+    pub binding: Option<String>,
+    pub may_follow: Option<Vec<Category>>,
 }
 
 #[derive(Deserialize)]
-struct RuleCategoryDefinition {
-    default_associativity: Option<Associativity>,
-    default_precedence: Option<u32>,
-    may_follow: Vec<Category>,
-    rules: Vec<RuleDefinition>,
+pub struct RuleCategoryDefinition {
+    pub default_associativity: Option<Associativity>,
+    pub default_precedence: Option<u32>,
+    pub may_follow: Vec<Category>,
+    pub rules: Vec<RuleDefinition>,
 }
 
 #[derive(Deserialize)]
-struct RuleCollectionDefinition(
+pub struct RuleCollectionDefinition(
     #[serde(with = "::serde_with::rust::maps_duplicate_key_is_error")]
-    HashMap<Category, RuleCategoryDefinition>,
+    pub  HashMap<Category, RuleCategoryDefinition>,
 );
+
+fn builtin_rulesets() -> &'static [(Syntax, &'static str)] {
+    &[
+        (Syntax::Standard, include_str!("json/standard.json")),
+        (Syntax::LaTeX, include_str!("json/latex.json")),
+    ]
+}
+
+pub(crate) fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
+    let builtins = builtin_rulesets();
+    match builtins.iter().position(|x| x.0 == *syntax) {
+        Some(index) => Some(builtins[index].1),
+        None => None,
+    }
+}
 
 impl fmt::Display for Category {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

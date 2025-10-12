@@ -13,7 +13,7 @@ type BindingMap<T> = HashMap<&'static str, Function<T>>;
 pub trait FunctionBindings {
     type ExprType: NumericType;
 
-    fn builtin_bindings() -> BindingMap<Self::ExprType>;
+    fn get_bindings() -> BindingMap<Self::ExprType>;
 
     fn register_bindings(
         bindings: &'static [(&str, FunctionPointer<Self::ExprType>, usize)],
@@ -23,15 +23,19 @@ pub trait FunctionBindings {
 }
 
 pub fn register_bindings<T: NumericType + FunctionBindings<ExprType = T>>(
-    bindings: &'static [(&str, FunctionPointer<T>, usize)],
+    bindings: &'static [(&'static str, FunctionPointer<T>, usize)],
 ) -> Result<(), Error> {
     <T as FunctionBindings>::register_bindings(bindings)
+}
+
+pub fn get_bindings<T: NumericType + FunctionBindings<ExprType = T>>() -> BindingMap<T> {
+    <T as FunctionBindings>::get_bindings()
 }
 
 macro_rules! register_supported_type {
     ( $($Type:r#ident),+ ) => { $( paste::paste! {
 
-        static [<$Type:upper _DEFINITIONS>]: &[(&str, FunctionPointer<$Type>, usize)] = &[
+        static [<$Type:upper _DEFINITIONS>]: &[(&'static str, FunctionPointer<$Type>, usize)] = &[
 
             ("Add", definitions::add, 2),
             ("Subtract", definitions::subtract, 2),
@@ -42,13 +46,13 @@ macro_rules! register_supported_type {
         ];
 
         static [<$Type:upper _BINDINGS>]: LazyLock<RwLock<BindingMap<$Type>>> = LazyLock::new(|| {
-            RwLock::new(<$Type as FunctionBindings>::builtin_bindings())
+            RwLock::new(<$Type as FunctionBindings>::get_bindings())
         });
 
         impl FunctionBindings for $Type {
             type ExprType = $Type;
 
-            fn builtin_bindings() -> BindingMap<Self::ExprType> {
+            fn get_bindings() -> BindingMap<Self::ExprType> {
                 let mut map: BindingMap<Self::ExprType> = HashMap::with_capacity(
                     [<$Type:upper _DEFINITIONS>].len()
                 );

@@ -13,4 +13,5 @@ Flexible crate for parsing and evaluating strings representing equations
 
 ## Roadmap
 - Improve error messages, including position error occurred
-- Add support for integration and summation functions
+- Support for wrapping operators like |...| 
+- Add support for integration, differentiation and summation

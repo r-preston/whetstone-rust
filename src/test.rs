@@ -17,8 +17,8 @@ fn main() {
         Ok(_) => (),
         Err(e) => panic!("{}", e.message),
     }
-
-    //bindings::get_bindings::<f32>();
+    let bindings = bindings::get_bindings::<f32>();
+    let func = bindings["cheese"].label;
 
     //syntax::copy_syntax
     //syntax::

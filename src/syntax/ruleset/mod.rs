@@ -1,6 +1,5 @@
 pub(crate) mod rule;
 
-use super::Syntax;
 use super::{Associativity, Category};
 use crate::{
     bindings::FunctionBindings,
@@ -12,48 +11,10 @@ use crate::{
 use regex::Regex;
 use rule::Rule;
 
-use std::fs;
-
 pub(crate) struct Ruleset<T: NumericType>(Vec<Box<Rule<T>>>);
 
-fn builtin_rulesets() -> &'static [(Syntax, &'static str)] {
-    &[
-        (Syntax::Standard, "syntax/standard.json"),
-        (Syntax::LaTeX, "syntax/latex.json"),
-    ]
-}
-
-pub(crate) fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
-    let builtins = builtin_rulesets();
-    match builtins.iter().position(|x| x.0 == *syntax) {
-        Some(index) => Some(builtins[index].1),
-        None => None,
-    }
-}
-
 impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
-    pub fn load_ruleset(path: &str) -> Result<Ruleset<T>, Error> {
-        if !fs::exists(path).unwrap_or(false) {
-            return_error!(ErrorType::FileNotFoundError, "Could not find '{path}'");
-        }
-
-        let json_string: String = match fs::read_to_string(path) {
-            Ok(data) => data,
-            Err(msg) => {
-                return_error!(ErrorType::FileReadError, "{}", msg);
-            }
-        };
-
-        let rule_definitions = match serde_json::from_str::<RuleCollectionDefinition>(&json_string)
-        {
-            Ok(deserialized) => deserialized,
-            Err(e) => return_error!(
-                ErrorType::RuleParseError,
-                "JSON error in rule definition: {:?}",
-                e
-            ),
-        };
-
+    pub fn create(rule_definitions: RuleCollectionDefinition) -> Result<Ruleset<T>, Error> {
         let mut rules: Vec<Box<Rule<T>>> = Vec::new();
 
         for (category, category_def) in rule_definitions.0 {
