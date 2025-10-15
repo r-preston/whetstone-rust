@@ -30,7 +30,7 @@ impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
                     )
                 }
                 let pattern = match Regex::new(&format!(
-                    "^({})(.*)",
+                    r"^(?i)({})(.*)",
                     rule_def.pattern.unwrap_or(String::new())
                 )) {
                     Ok(re) => re,

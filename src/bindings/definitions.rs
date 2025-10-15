@@ -78,3 +78,6 @@ pub fn log<T: NumericType>(args: &[T]) -> Value<T> {
 pub fn log10<T: NumericType>(args: &[T]) -> Value<T> {
     Ok(args[0].log10())
 }
+pub fn abs<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0].abs())
+}

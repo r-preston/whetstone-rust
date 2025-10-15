@@ -40,7 +40,7 @@
         ]
     },
     "Functions": {
-        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "CloseBrackets", "Separators"],
         "rules": [
             {
                 "pattern": "-",
@@ -121,6 +121,10 @@
             {
                 "pattern": "log10",
                 "binding": "LogBase10"
+            },
+            {
+                "pattern": "abs",
+                "binding": "Modulus"
             }
         ]
     },

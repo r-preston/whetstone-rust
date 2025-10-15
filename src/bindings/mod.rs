@@ -63,6 +63,7 @@ macro_rules! register_supported_type {
             ("Cotangent", definitions::cotangent, 1),
             ("LogBaseE", definitions::log, 1),
             ("LogBase10", definitions::log10, 1),
+            ("Modulus", definitions::abs, 1),
 
         ];
 

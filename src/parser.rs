@@ -305,8 +305,8 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
 
         // Multiple rules match the string and are valid after the last token:
         // sort rules descending by rule priority and then by number of characters matched
-        matching_rules.sort_by(|a, b| match b.0.priority().cmp(&a.0.priority()) {
-            std::cmp::Ordering::Equal => b.1.len().cmp(&a.1.len()),
+        matching_rules.sort_by(|a, b| match a.0.priority().cmp(&b.0.priority()) {
+            std::cmp::Ordering::Equal => a.1.len().cmp(&b.1.len()),
             unequal => unequal,
         });
 

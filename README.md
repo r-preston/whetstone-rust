@@ -12,11 +12,10 @@ Flexible crate for parsing and evaluating strings representing equations
 ### Common and LaTeX syntax built-in 
 
 ## To do
-- bracket style matching context
-- case sensitivity
+- latex syntax
+- Improve error messages, including position error occurred
 - documentation
 
 ## Roadmap
-- Improve error messages, including position error occurred
-- Support for wrapping operators like |...| 
+- Support for wrapping functions/operators like |...| 
 - Add support for integration, differentiation and summation
