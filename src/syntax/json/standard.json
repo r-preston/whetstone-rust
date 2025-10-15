@@ -157,13 +157,16 @@
         "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
-                "pattern": "\\("
+                "pattern": "\\(",
+                "context": 0
             },
             {
-                "pattern": "\\["
+                "pattern": "\\[",
+                "context": 1
             },
             {
-                "pattern": "\\{"
+                "pattern": "\\{",
+                "context": 2
             }
         ]
     },
@@ -171,13 +174,16 @@
         "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
         "rules": [
             {
-                "pattern": "\\)"
+                "pattern": "\\)",
+                "context": 0
             },
             {
-                "pattern": "\\]"
+                "pattern": "\\]",
+                "context": 1
             },
             {
-                "pattern": "\\}"
+                "pattern": "\\}",
+                "context": 2
             }
         ]
     },

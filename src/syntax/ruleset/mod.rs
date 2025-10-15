@@ -47,13 +47,18 @@ impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
                     .unwrap_or_else(|| category_def.may_follow.clone());
                 rules.push(Box::new(match category {
                     Category::Literals => Rule::new_literal_rule(pattern, follows),
-                    Category::Variables => Rule::new_variable_rule(pattern, follows),
-                    Category::CloseBrackets | Category::OpenBrackets | Category::Separators => {
+                    Category::Variables => Rule::new_variable_rule(pattern, follows),Category::Separators => {
                         Rule::new_non_expression_rule(
                             pattern,
                             category.clone(),
                             follows,
                         )
+                    }
+                    Category::CloseBrackets | Category::OpenBrackets => {
+                        match rule_def.context {
+                            Some(i) => Rule::new_bracket_rule(pattern, category.clone(), follows, i),
+                            None => return_error!(ErrorType::RuleParseError, "Parenthesis rules require integer field 'context'"),
+                        }
                     }
                     Category::Constants | Category::Functions | Category::Operators | Category::ImplicitOperators => {
                         let binding = match rule_def.binding {

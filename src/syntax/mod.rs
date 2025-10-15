@@ -46,6 +46,7 @@ pub struct RuleDefinition {
     pub associativity: Option<Associativity>,
     pub binding: Option<String>,
     pub may_follow: Option<Vec<Category>>,
+    pub context: Option<i32>,
 }
 
 #[derive(Deserialize)]

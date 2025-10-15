@@ -66,6 +66,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
 
         let mut remainder = equation_string.trim().to_string();
         let mut last_token: Option<Category> = None;
+        let mut bracket_context = Vec::new();
         while !remainder.is_empty() {
             let (rule, matched_str, remaining_str) =
                 self.match_next_token(&remainder, &last_token)?;
@@ -147,7 +148,10 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                         }
                     }
                 }
-                Category::OpenBrackets => operator_stack.push((rule, expression)),
+                Category::OpenBrackets => {
+                    bracket_context.push(rule.bracket_context());
+                    operator_stack.push((rule, expression))
+                }
                 Category::CloseBrackets => {
                     /*
                      *  while the operator at the top of the operator stack is not a left parenthesis:
@@ -159,6 +163,14 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                      *  if there is a function token at the top of the operator stack, then:
                      *      pop the function from the operator stack into the output queue}
                      */
+                    if rule.bracket_context()
+                        != bracket_context
+                            .pop()
+                            .unwrap_or_else(|| rule.bracket_context() + 1)
+                    {
+                        syntax_error!("Mismatched brackets")
+                    }
+
                     while operator_stack
                         .last()
                         .is_none_or(|val| val.0.category() != Category::OpenBrackets)

@@ -8,8 +8,8 @@ pub(crate) struct Rule<T: NumericType> {
     precedence: u32,
     category: Category,
     binding: Option<(Function<T>, Associativity)>,
-    //phantom: PhantomData<T>,
     follows: Vec<Category>,
+    context: i32,
 }
 
 impl<T: NumericType> Rule<T> {
@@ -24,6 +24,23 @@ impl<T: NumericType> Rule<T> {
             category,
             binding: None,
             follows,
+            context: 0,
+        }
+    }
+
+    pub fn new_bracket_rule(
+        pattern: Regex,
+        category: Category,
+        follows: Vec<Category>,
+        pair_context: i32,
+    ) -> Rule<T> {
+        Rule {
+            pattern,
+            precedence: 0,
+            category,
+            binding: None,
+            follows,
+            context: pair_context,
         }
     }
 
@@ -41,6 +58,7 @@ impl<T: NumericType> Rule<T> {
             category,
             binding: (Some((binding, associativity))),
             follows,
+            context: 0,
         }
     }
 
@@ -51,6 +69,7 @@ impl<T: NumericType> Rule<T> {
             category: Category::Literals,
             binding: None,
             follows,
+            context: 0,
         }
     }
 
@@ -61,6 +80,7 @@ impl<T: NumericType> Rule<T> {
             category: Category::Variables,
             binding: None,
             follows,
+            context: 0,
         }
     }
 
@@ -105,6 +125,10 @@ impl<T: NumericType> Rule<T> {
 
     pub fn binding(&self) -> &Option<(Function<T>, Associativity)> {
         &self.binding
+    }
+
+    pub fn bracket_context(&self) -> i32 {
+        self.context
     }
 
     pub fn priority(&self) -> u32 {
