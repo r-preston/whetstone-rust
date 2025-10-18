@@ -65,11 +65,12 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             Vec::new();
 
         let mut remainder = equation_string.trim().to_string();
+        let mut position = equation_string.rfind(&remainder).unwrap_or(0);
         let mut last_token: Option<Category> = None;
         let mut bracket_context = Vec::new();
         while !remainder.is_empty() {
             let (rule, matched_str, remaining_str) =
-                self.match_next_token(&remainder, &last_token)?;
+                self.match_next_token(&remainder, &last_token, position)?;
             remainder = remaining_str.trim().to_string();
             if remainder.is_empty() && !rule.allowed_at_end() {
                 syntax_error!(
@@ -169,7 +170,11 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                             .pop()
                             .unwrap_or_else(|| rule.bracket_context() + 1)
                     {
-                        syntax_error!("Mismatched brackets")
+                        syntax_error!(
+                            "{} at position {} does not match last opening bracket",
+                            matched_str,
+                            position
+                        );
                     }
 
                     while operator_stack
@@ -185,10 +190,10 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                         }
                     }
                     match operator_stack.pop() {
-                        None => syntax_error!("Mismatched bracket"),
+                        None => syntax_error!("Closing bracket '{}' at position {} used without opening bracket first", matched_str, position),
                         Some((rule, _expression)) => {
                             if rule.category() != Category::OpenBrackets {
-                                syntax_error!("Mismatched bracket")
+                                syntax_error!("Closing bracket '{}' at position {} used without opening bracket first", matched_str, position);
                             }
                         }
                     }
@@ -202,6 +207,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                     }
                 }
             }
+            position = equation_string.rfind(&remainder).unwrap_or(position);
         } /*
            *   // After the while loop, pop the remaining items from the operator stack into the output queue.
            *   while there are tokens on the operator stack:
@@ -212,7 +218,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
         while !operator_stack.is_empty() {
             let (rule, expression) = operator_stack.pop().unwrap();
             if rule.category() == Category::OpenBrackets {
-                syntax_error!("Mismatched bracket")
+                syntax_error!("Unclosed opening bracket")
             }
             if expression.is_some() {
                 expressions.push(expression.unwrap());
@@ -235,6 +241,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
         &self,
         equation_string: &str,
         last_token: &Option<Category>,
+        position: usize,
     ) -> Result<(Box<Rule<T>>, String, String), Error> {
         // find all rules that match the next token of the equation
 
@@ -279,25 +286,28 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                 // string doesn't match any rule regex
                 0 => {
                     syntax_error!(
-                        "No registered rules match start of expression '{}'",
-                        equation_string
+                        "No registered rules match start of expression '{}' at position {}",
+                        equation_string,
+                        position
                     )
                 }
                 // one rule matches but context was not valid
                 1 => {
                     let rule = invalid_rules[0];
                     syntax_error!(
-                        "{} {} rule may not appear after {}",
+                        "{} {} rule may not appear after {} at position {}",
                         format!("'{}'", rule.1),
                         rule.0.category(),
-                        last_token_str
+                        last_token_str,
+                        position
                     )
                 }
                 // multiple rules matched but none had valid context
                 _ => {
                     syntax_error!(
-                        "Multiple rules match start of '{}' but none may appear after {}",
+                        "Multiple rules match start of '{}' at position {} but none may appear after {}",
                         equation_string,
+                        position,
                         last_token_str
                     )
                 }
@@ -331,7 +341,11 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             }
         }
 
-        syntax_error!("'{}' does not match any registered rule", equation_string);
+        syntax_error!(
+            "Expression '{}' at position {} does not match any registered rule",
+            equation_string,
+            position
+        );
     }
 
     fn create_expression(
