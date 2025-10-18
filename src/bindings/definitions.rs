@@ -81,3 +81,21 @@ pub fn log10<T: NumericType>(args: &[T]) -> Value<T> {
 pub fn abs<T: NumericType>(args: &[T]) -> Value<T> {
     Ok(args[0].abs())
 }
+pub fn modulo<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0] % args[1])
+}
+pub fn ceiling<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0].ceil())
+}
+pub fn floor<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0].floor())
+}
+pub fn round<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0].round())
+}
+pub fn min<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0].min(args[1]))
+}
+pub fn max<T: NumericType>(args: &[T]) -> Value<T> {
+    Ok(args[0].max(args[1]))
+}

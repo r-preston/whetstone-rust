@@ -90,6 +90,7 @@ impl<T: NumericType> Rule<T> {
             | Category::Functions
             | Category::Literals
             | Category::OpenBrackets
+            | Category::Fluff
             | Category::Variables => true,
             Category::CloseBrackets
             | Category::Operators
@@ -103,6 +104,7 @@ impl<T: NumericType> Rule<T> {
             Category::CloseBrackets
             | Category::Constants
             | Category::Literals
+            | Category::Fluff
             | Category::Variables => true,
             Category::Functions
             | Category::OpenBrackets
@@ -114,6 +116,7 @@ impl<T: NumericType> Rule<T> {
 
     pub fn can_follow(&self, token: Option<Category>) -> bool {
         match token {
+            Some(Category::Fluff) => true,
             Some(category) => self.follows.contains(&category),
             None => self.allowed_at_start(),
         }
@@ -139,6 +142,7 @@ impl<T: NumericType> Rule<T> {
             Category::Literals => 2,
             Category::Variables => 1,
             Category::ImplicitOperators => 0,
+            Category::Fluff => 0,
         }
     }
 

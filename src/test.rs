@@ -24,6 +24,9 @@ fn main() {
     //syntax::
 
     let factory = Parser::<f32>::new(Syntax::Standard).unwrap();
+    let factory2 = Parser::<f32>::new(Syntax::LaTeX).unwrap();
+    let a = factory2.parse("x\\,+\\,1").unwrap();
+    println!("{}", a.evaluate(&[]).unwrap());
     //let equation = factory.parse("x-1.3").unwrap();
     //let equation2 = factory.parse("x+y").unwrap();
     //let equation3 = factory.parse("2*x^2").unwrap();

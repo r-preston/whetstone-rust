@@ -3,7 +3,7 @@
         "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
         "rules": [
             {
-                "pattern": "\\+",
+                "pattern": "+",
                 "binding": "Add",
                 "precedence": 1
             },
@@ -13,7 +13,7 @@
                 "precedence": 1
             },
             {
-                "pattern": "\\*",
+                "pattern": "*",
                 "binding": "Multiply",
                 "precedence": 2
             },
@@ -23,7 +23,12 @@
                 "precedence": 2
             },
             {
-                "pattern": "\\^",
+                "pattern": "%",
+                "binding": "Modulo",
+                "precedence": 2
+            },
+            {
+                "pattern": "^",
                 "binding": "Exponent",
                 "precedence": 3,
                 "associativity": "RightToLeft"
@@ -99,7 +104,7 @@
                 "binding": "InvHypTangent"
             },
             {
-                "pattern": "cosec",
+                "pattern": "csc",
                 "binding": "Cosecant"
             },
             {
@@ -124,7 +129,31 @@
             },
             {
                 "pattern": "abs",
-                "binding": "Modulus"
+                "binding": "Absolute"
+            },
+            {
+                "pattern": "round",
+                "binding": "Round"
+            },
+            {
+                "pattern": "ceil",
+                "binding": "Ceiling"
+            },
+            {
+                "pattern": "floor",
+                "binding": "Floor"
+            },
+            {
+                "pattern": "mod",
+                "binding": "Modulo"
+            },
+            {
+                "pattern": "min",
+                "binding": "Min"
+            },
+            {
+                "pattern": "max",
+                "binding": "Max"
             }
         ]
     },
@@ -132,7 +161,8 @@
         "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
-                "pattern": "-?[0-9]+(?:\\.[0-9]+)?"
+                "pattern": "-?[0-9]+(?:\\.[0-9]+)?",
+                "pattern_is_regex": true
             }
         ]
     },
@@ -140,7 +170,8 @@
         "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
-                "pattern": "[a-zA-Z][a-zA-Z0-9]*"
+                "pattern": "[a-zA-Z][a-zA-Z0-9]*",
+                "pattern_is_regex": true
             }
         ]
     },
@@ -161,15 +192,15 @@
         "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
-                "pattern": "\\(",
+                "pattern": "(",
                 "context": 0
             },
             {
-                "pattern": "\\[",
+                "pattern": "[",
                 "context": 1
             },
             {
-                "pattern": "\\{",
+                "pattern": "{",
                 "context": 2
             }
         ]
@@ -178,15 +209,15 @@
         "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
         "rules": [
             {
-                "pattern": "\\)",
+                "pattern": ")",
                 "context": 0
             },
             {
-                "pattern": "\\]",
+                "pattern": "]",
                 "context": 1
             },
             {
-                "pattern": "\\}",
+                "pattern": "}",
                 "context": 2
             }
         ]
@@ -200,6 +231,3 @@
         ]
     }
 }
-
-
-    

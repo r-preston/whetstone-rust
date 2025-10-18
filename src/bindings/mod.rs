@@ -44,6 +44,9 @@ macro_rules! register_supported_type {
             ("Multiply", definitions::multiply, 2),
             ("Divide", definitions::divide, 2),
             ("Exponent", definitions::exponent, 2),
+            ("Modulo", definitions::modulo, 2),
+            ("Min", definitions::min, 2),
+            ("Max", definitions::max, 2),
             ("Negate", definitions::negate, 1),
             ("SquareRoot", definitions::sqrt, 1),
             ("Sine", definitions::sine, 1),
@@ -63,7 +66,10 @@ macro_rules! register_supported_type {
             ("Cotangent", definitions::cotangent, 1),
             ("LogBaseE", definitions::log, 1),
             ("LogBase10", definitions::log10, 1),
-            ("Modulus", definitions::abs, 1),
+            ("Absolute", definitions::abs, 1),
+            ("Round", definitions::round, 1),
+            ("Ceiling", definitions::ceiling, 1),
+            ("Floor", definitions::floor, 1),
 
         ];
 

@@ -12,10 +12,13 @@ Flexible crate for parsing and evaluating strings representing equations
 ### Common and LaTeX syntax built-in 
 
 ## To do
-- latex syntax
+- preset variables, improve variable interface
+- detect variables in demo
 - Improve error messages, including position error occurred
+- tests
 - documentation
 
 ## Roadmap
 - Support for wrapping functions/operators like |...| 
+- Support for capturing functions like \sqrt[n]{...}
 - Add support for integration, differentiation and summation

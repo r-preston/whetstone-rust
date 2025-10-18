@@ -1,1 +1,404 @@
-{}
+{
+    "Operators": {
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
+        "rules": [
+            {
+                "pattern": "+",
+                "binding": "Add",
+                "precedence": 1
+            },
+            {
+                "pattern": "-",
+                "binding": "Subtract",
+                "precedence": 1
+            },
+            {
+                "pattern": "*",
+                "binding": "Multiply",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\ast",
+                "binding": "Multiply",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\times",
+                "binding": "Multiply",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\cdot",
+                "binding": "Multiply",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\cdotp",
+                "binding": "Multiply",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\centerdot",
+                "binding": "Multiply",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\div",
+                "binding": "Divide",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\over",
+                "binding": "Divide",
+                "precedence": 2
+            },
+            {
+                "pattern": "/",
+                "binding": "Divide",
+                "precedence": 2
+            },
+            {
+                "pattern": "^",
+                "binding": "Exponent",
+                "precedence": 3,
+                "associativity": "RightToLeft"
+            },
+            {
+                "pattern": "\\mod",
+                "binding": "Modulo",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\bmod",
+                "binding": "Modulo",
+                "precedence": 2
+            },
+            {
+                "pattern": "\\pmod",
+                "binding": "Modulo",
+                "precedence": 2
+            }
+        ]
+    },
+    "ImplicitOperators": {
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
+        "rules": [
+            {
+                "binding": "Multiply",
+                "precedence": 2
+            }
+        ]
+    },
+    "Functions": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "CloseBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "\\frac",
+                "binding": "Divide"
+            },
+            {
+                "pattern": "\\tfrac",
+                "binding": "Divide"
+            },
+            {
+                "pattern": "\\dfrac",
+                "binding": "Divide"
+            },
+            {
+                "pattern": "\\cfrac",
+                "binding": "Divide"
+            },
+            {
+                "pattern": "-",
+                "binding": "Negate"
+            },
+            {
+                "pattern": "\\sqrt",
+                "binding": "SquareRoot"
+            },
+            {
+                "pattern": "\\sin",
+                "binding": "Sine"
+            },
+            {
+                "pattern": "\\cos",
+                "binding": "Cosine"
+            },
+            {
+                "pattern": "\\tan",
+                "binding": "Tangent"
+            },
+            {
+                "pattern": "\\arcsin",
+                "binding": "Arcsine"
+            },
+            {
+                "pattern": "\\arccos",
+                "binding": "Arccosine"
+            },
+            {
+                "pattern": "\\arctan",
+                "binding": "Arctangent"
+            },
+            {
+                "pattern": "\\sinh",
+                "binding": "HypSine"
+            },
+            {
+                "pattern": "\\cosh",
+                "binding": "HypCosine"
+            },
+            {
+                "pattern": "\\tanh",
+                "binding": "HypTangent"
+            },
+            {
+                "pattern": "\\\\operatorname\\*?\\{arsinh\\}",
+                "pattern_is_regex": true,
+                "binding": "InvHypSine"
+            },
+            {
+                "pattern": "\\\\operatorname\\*?\\{arcosh\\}",
+                "pattern_is_regex": true,
+                "binding": "InvHypCosine"
+            },
+            {
+                "pattern": "\\\\operatorname\\*?\\{artanh\\}",
+                "pattern_is_regex": true,
+                "binding": "InvHypTangent"
+            },
+            {
+                "pattern": "\\csc",
+                "binding": "Cosecant"
+            },
+            {
+                "pattern": "\\sec",
+                "binding": "Secant"
+            },
+            {
+                "pattern": "\\cot",
+                "binding": "Cotangent"
+            },
+            {
+                "pattern": "\\log",
+                "binding": "LogBaseE"
+            },
+            {
+                "pattern": "\\ln",
+                "binding": "LogBaseE"
+            },
+            {
+                "pattern": "\\log_10",
+                "binding": "LogBase10"
+            },
+            {
+                "pattern": "\\\\operatorname\\*?\\{round\\}",
+                "pattern_is_regex": true,
+                "binding": "Round"
+            },
+            {
+                "pattern": "\\\\operatorname\\*?\\{ceil\\}",
+                "pattern_is_regex": true,
+                "binding": "Ceiling"
+            },
+            {
+                "pattern": "\\\\operatorname\\*?\\{floor\\}",
+                "pattern_is_regex": true,
+                "binding": "Floor"
+            },
+            {
+                "pattern": "\\min",
+                "binding": "Min"
+            },
+            {
+                "pattern": "\\max",
+                "binding": "Max"
+            }
+        ]
+    },
+    "Literals": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "-?[0-9]+(?:\\.[0-9]+)?",
+                "pattern_is_regex": true
+            }
+        ]
+    },
+    "Variables": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "\\\\?[a-zA-Z0-9\\-]+(?:[\\\\_{^]\\\\?[{}a-zA-Z0-9\\-]+\\}?)*",
+                "pattern_is_regex": true
+            }
+        ]
+    },
+    "Constants": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "\\pi",
+                "binding": "Pi"
+            },
+            {
+                "pattern": "e",
+                "binding": "Euler"
+            }
+        ]
+    },
+    "OpenBrackets": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "(",
+                "context": 0
+            },
+            {
+                "pattern": "[",
+                "context": 1
+            },
+            {
+                "pattern": "{",
+                "context": 2
+            },
+            {
+                "pattern": "\\{",
+                "context": 3
+            },
+            {
+                "pattern": "\\lang",
+                "context": 4
+            },
+            {
+                "pattern": "\\big(",
+                "context": 5
+            },
+            {
+                "pattern": "\\Big(",
+                "context": 6
+            },
+            {
+                "pattern": "\\bigg(",
+                "context": 7
+            },
+            {
+                "pattern": "\\Bigg(",
+                "context": 8
+            },
+            {
+                "pattern": "\\big[",
+                "context": 9
+            },
+            {
+                "pattern": "\\Big[",
+                "context": 10
+            },
+            {
+                "pattern": "\\bigg[",
+                "context": 11
+            },
+            {
+                "pattern": "\\Bigg[",
+                "context": 12
+            },
+            {
+                "pattern": "\\left(",
+                "context": 13
+            },
+            {
+                "pattern": "\\left[",
+                "context": 14
+            },
+            {
+                "pattern": "\\left{",
+                "context": 15
+            }
+        ]
+    },
+    "CloseBrackets": {
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
+        "rules": [
+            {
+                "pattern": ")",
+                "context": 0
+            },
+            {
+                "pattern": "]",
+                "context": 1
+            },
+            {
+                "pattern": "}",
+                "context": 2
+            },
+            {
+                "pattern": "\\}",
+                "context": 3
+            },
+            {
+                "pattern": "\\rang",
+                "context": 4
+            },
+            {
+                "pattern": "\\big)",
+                "context": 5
+            },
+            {
+                "pattern": "\\Big)",
+                "context": 6
+            },
+            {
+                "pattern": "\\bigg)",
+                "context": 7
+            },
+            {
+                "pattern": "\\Bigg)",
+                "context": 8
+            },
+            {
+                "pattern": "\\big]",
+                "context": 9
+            },
+            {
+                "pattern": "\\Big]",
+                "context": 10
+            },
+            {
+                "pattern": "\\bigg]",
+                "context": 11
+            },
+            {
+                "pattern": "\\Bigg]",
+                "context": 12
+            },
+            {
+                "pattern": "\\right)",
+                "context": 13
+            },
+            {
+                "pattern": "\\right]",
+                "context": 14
+            },
+            {
+                "pattern": "\\right}",
+                "context": 15
+            }
+        ]
+    },
+    "Separators": {
+        "may_follow": ["Literals", "Constants", "Variables", "CloseBrackets"],
+        "rules": [
+            {
+                "pattern": ","
+            }
+        ]
+    },
+    "Fluff": {
+        "may_follow": ["Operators", "ImplicitOperators", "Functions", "Literals", "Constants", "Variables", "OpenBrackets", "CloseBrackets", "Separators"],
+        "rules": [
+            {
+                "pattern": "\\,"
+            }
+        ]
+    }
+}

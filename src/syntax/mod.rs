@@ -30,6 +30,8 @@ pub enum Category {
     CloseBrackets,
     /// tokens that are required by the syntax but have no direct affect, for example the separator between function arguments
     Separators,
+    /// tokens with no syntactic meaning that can be ignored
+    Fluff,
 }
 
 /// The order in which operations with equal precedence should be resolved
@@ -42,6 +44,7 @@ pub enum Associativity {
 #[derive(Deserialize)]
 pub struct RuleDefinition {
     pub pattern: Option<String>,
+    pub pattern_is_regex: Option<bool>,
     pub precedence: Option<u32>,
     pub associativity: Option<Associativity>,
     pub binding: Option<String>,
@@ -90,6 +93,7 @@ impl fmt::Display for Category {
             Self::OpenBrackets => write!(f, "Opening Brackets"),
             Self::CloseBrackets => write!(f, "Closing Brackets"),
             Self::Separators => write!(f, "Separators"),
+            Self::Fluff => write!(f, "Fluff"),
         }
     }
 }

@@ -29,9 +29,13 @@ impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
                         "ImplicitOperators no not support field 'pattern'"
                     )
                 }
+                let json_pattern = rule_def.pattern.unwrap_or(String::new());
                 let pattern = match Regex::new(&format!(
                     r"^(?i)({})(.*)",
-                    rule_def.pattern.unwrap_or(String::new())
+                    match rule_def.pattern_is_regex {
+                        None | Some(false) => regex::escape(&json_pattern),
+                        Some(true) => json_pattern,
+                    }
                 )) {
                     Ok(re) => re,
                     Err(e) => {
@@ -47,7 +51,8 @@ impl<T: NumericType<ExprType = T> + FunctionBindings> Ruleset<T> {
                     .unwrap_or_else(|| category_def.may_follow.clone());
                 rules.push(Box::new(match category {
                     Category::Literals => Rule::new_literal_rule(pattern, follows),
-                    Category::Variables => Rule::new_variable_rule(pattern, follows),Category::Separators => {
+                    Category::Variables => Rule::new_variable_rule(pattern, follows),
+                    Category::Separators | Category::Fluff => {
                         Rule::new_non_expression_rule(
                             pattern,
                             category.clone(),

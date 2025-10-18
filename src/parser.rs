@@ -109,6 +109,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             let expression = self.create_expression(&rule, &matched_str, &mut variables)?;
 
             match rule.category() {
+                Category::Fluff => {}
                 Category::Literals | Category::Constants | Category::Variables => {
                     expressions.push(expression.unwrap())
                 }
@@ -385,7 +386,10 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                 ))))
             }
             // Rules that do not correspond to an Expression
-            Category::CloseBrackets | Category::OpenBrackets | Category::Separators => Ok(None),
+            Category::CloseBrackets
+            | Category::OpenBrackets
+            | Category::Separators
+            | Category::Fluff => Ok(None),
         }
     }
 }
