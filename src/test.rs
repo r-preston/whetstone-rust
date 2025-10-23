@@ -26,10 +26,10 @@ fn main() {
     let factory = Parser::<f32>::new(Syntax::Standard).unwrap();
     let factory2 = Parser::<f32>::new(Syntax::LaTeX).unwrap();
     let a = factory2.parse("x\\,+\\,1").unwrap();
-    println!("{}", a.evaluate(&[]).unwrap());
+    //println!("{}", a.evaluate(&[]).unwrap());
     //let equation = factory.parse("x-1.3").unwrap();
     //let equation2 = factory.parse("x+y").unwrap();
     //let equation3 = factory.parse("2*x^2").unwrap();
-    let equation4 = factory.parse("2sin x+3").unwrap();
-    let _ = equation4.evaluate(&[("x", 0.0)]);
+    //let equation4 = factory.parse("2sin x+3").unwrap();
+    //let _ = equation4.evaluate(&[("x", 0.0)]);
 }

@@ -38,6 +38,7 @@ fn main() -> eframe::Result {
 }
 
 pub struct DemoApp {
+    equation_label: String,
     equation_str: String,
     equation: Equation<f32>,
     syntax: Syntax,
@@ -58,6 +59,7 @@ impl DemoApp {
         let equation_factory = Parser::<f32>::new(Syntax::Standard).unwrap();
         let equation_str = "x";
         Self {
+            equation_label: "f() =".to_string(),
             equation_str: equation_str.to_string(),
             equation: equation_factory.parse(equation_str).unwrap(),
             syntax: Syntax::Standard,
@@ -78,7 +80,7 @@ impl eframe::App for DemoApp {
         let settings_drawn: Response = settings
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label("Equation");
+                    ui.label(&self.equation_label);
 
                     let color = if self.error.is_some() {
                         Color32::from_rgb(100, 0, 0)
@@ -139,14 +141,18 @@ impl eframe::App for DemoApp {
                 canvas.draw_grid_lines();
                 canvas.draw_axes();
 
-                for (i, point) in self.y_coords.iter_mut().enumerate() {
-                    *point = self
-                        .equation
-                        .evaluate(&[("x", self.x_coords[i])])
-                        .unwrap_or_else(|err| -> f32 {
+                let vars = self.equation.variables();
+                self.equation_label = format!("f({}) =", vars.join(", "));
+                if vars.len() == 1 {
+                    for (i, point) in self.y_coords.iter_mut().enumerate() {
+                        *(self.equation.variable(&vars[0]).unwrap()) = self.x_coords[i];
+                        *point = self.equation.evaluate().unwrap_or_else(|err| -> f32 {
                             self.error = Some(err.message);
                             return 0.0;
                         });
+                    }
+                } else {
+                    self.error = Some(format!("Must be an equation of a single variable"));
                 }
 
                 canvas.draw_points(

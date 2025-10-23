@@ -12,9 +12,6 @@ Flexible crate for parsing and evaluating strings representing equations
 ### Common and LaTeX syntax built-in 
 
 ## To do
-- preset variables, improve variable interface
-- detect variables in demo
-- Improve error messages, including position error occurred
 - tests
 - documentation
 

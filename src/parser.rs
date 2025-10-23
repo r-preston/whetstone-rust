@@ -1,4 +1,4 @@
-use std::cell::Cell;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -59,7 +59,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             syntax_error!("Equation string should not be empty");
         }
 
-        let mut variables: HashMap<String, Rc<Cell<T>>> = HashMap::new();
+        let mut variables: HashMap<String, Rc<RefCell<T>>> = HashMap::new();
         let mut expressions: Vec<Box<dyn Expression<ExprType = T>>> = Vec::new();
         let mut operator_stack: Vec<(Box<Rule<T>>, Option<Box<dyn Expression<ExprType = T>>>)> =
             Vec::new();
@@ -228,7 +228,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
         let equation = Equation::new(expressions, variables);
 
         // run through equation to check for any syntax errors that were not caught by the rules
-        match equation.evaluate(&[]) {
+        match equation.evaluate() {
             Ok(_) => Ok(equation),
             Err(e) => match e.error_type {
                 ErrorType::SyntaxError => Err(e),
@@ -352,7 +352,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
         &self,
         rule: &Rule<T>,
         token: &str,
-        variables: &mut HashMap<String, Rc<Cell<T>>>,
+        variables: &mut HashMap<String, Rc<RefCell<T>>>,
     ) -> Result<Option<Box<dyn Expression<ExprType = T>>>, Error> {
         match rule.category() {
             // Rules that produce an Expression of type Function
@@ -388,7 +388,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
                 if !variables.contains_key(token) {
                     variables.insert(
                         token.to_string(),
-                        Rc::new(Cell::new(
+                        Rc::new(RefCell::new(
                             <Variable<T> as Expression>::ExprType::from(0.0).unwrap(),
                         )),
                     );

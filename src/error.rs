@@ -11,7 +11,7 @@ pub enum ErrorType {
     /// Attempt to evaluate an uninitialised function
     NotInitialisedError,
     /// Tried to set value of a variable that doesn't exist
-    NoSuchVariableError,
+    VariableAccessError,
     /// Internal logic error
     InternalError,
     /// An error occurred registering function bindings
