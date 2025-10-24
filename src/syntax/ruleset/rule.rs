@@ -115,6 +115,9 @@ impl<T: NumericType> Rule<T> {
     }
 
     pub fn can_follow(&self, token: Option<Category>) -> bool {
+        if self.category == Category::Fluff {
+            return true;
+        }
         match token {
             Some(Category::Fluff) => true,
             Some(category) => self.follows.contains(&category),

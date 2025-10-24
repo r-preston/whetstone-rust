@@ -2,8 +2,8 @@
 
 extern crate whetstone;
 
-use whetstone::syntax::Syntax;
-use whetstone::{bindings, bindings::FunctionPointer, NumericType, Parser, Value};
+use whetstone::{bindings, bindings::FunctionPointer, NumericType, Value};
+use whetstone::{syntax::Syntax, Parser};
 
 pub fn custom_add<T: NumericType>(args: &[T]) -> Value<T> {
     Ok(args[0] + args[1])
@@ -18,14 +18,12 @@ fn main() {
         Err(e) => panic!("{}", e.message),
     }
     let bindings = bindings::get_bindings::<f32>();
-    //let func = bindings["cheese"].label;
-
-    //syntax::copy_syntax
-    //syntax::
 
     let factory = Parser::<f32>::new(Syntax::Standard).unwrap();
     let factory2 = Parser::<f32>::new(Syntax::LaTeX).unwrap();
     let a = factory2.parse("x\\,+\\,1").unwrap();
+    *a.variable("x").unwrap() = 1.0;
+
     //println!("{}", a.evaluate(&[]).unwrap());
     //let equation = factory.parse("x-1.3").unwrap();
     //let equation2 = factory.parse("x+y").unwrap();

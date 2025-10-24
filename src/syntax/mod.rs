@@ -3,6 +3,8 @@ pub(crate) mod ruleset;
 use serde::Deserialize;
 use std::{collections::HashMap, fmt};
 
+use crate::{error::return_error, Error, ErrorType};
+
 #[derive(PartialEq, Clone)]
 pub enum Syntax {
     Standard,
@@ -79,6 +81,29 @@ pub(crate) fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
         Some(index) => Some(builtins[index].1),
         None => None,
     }
+}
+
+pub fn get_definitions(syntax: &Syntax) -> Result<RuleCollectionDefinition, Error> {
+    let json = match get_builtin_ruleset(&syntax) {
+        Some(json) => json,
+        None => {
+            return_error!(
+                ErrorType::InternalError,
+                "Syntax has no registered definitions"
+            );
+        }
+    };
+
+    let rule_definitions = match serde_json::from_str::<RuleCollectionDefinition>(json) {
+        Ok(deserialized) => deserialized,
+        Err(e) => return_error!(
+            ErrorType::RuleParseError,
+            "JSON error in rule definition: {:?}",
+            e
+        ),
+    };
+
+    Ok(rule_definitions)
 }
 
 impl fmt::Display for Category {
