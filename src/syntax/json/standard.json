@@ -117,15 +117,11 @@
             },
             {
                 "pattern": "log",
-                "binding": "LogBaseE"
+                "binding": "LogBase10"
             },
             {
                 "pattern": "ln",
                 "binding": "LogBaseE"
-            },
-            {
-                "pattern": "log10",
-                "binding": "LogBase10"
             },
             {
                 "pattern": "abs",

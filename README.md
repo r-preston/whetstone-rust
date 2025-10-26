@@ -75,14 +75,18 @@ Create a parser from a JSON string of rule definitions using `Parser<T>::from_js
             {
                 // Pattern to match for this rule
                 "pattern": "+",
+                // If true, pattern is treated as a regex expression. Default: false
+                "pattern_is_regex": true,
                 // required if category is Function, Operator or Constant - unique label for code function associated with this operation or constant
-                "label": "Add",
+                "binding": "Add",
                 // required if category is Operator or Function and not defined for category - overrides the same field of category if present
                 "precedence": 3,
                 // optional - overrides the same field of category if present
                 "associativity": "LeftToRight",
                 // optional - overrides the same field of category if present
-                "may_follow": ["Literal", "Constant"]
+                "may_follow": ["Literal", "Constant"],
+                // integer currently used for brackets to identify which left and right brackets are pairs. matching brackets should have the same context value
+                "context": 1
             },
             ...
         ]

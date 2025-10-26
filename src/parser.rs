@@ -83,6 +83,7 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
              * if the token is:
              *   - a number:
              *        put it into the output queue
+             *        if the top of the operator stack is a function, pop it onto the output queue
              *   - a function:
              *        push it onto the operator stack
              *   - an operator o1:
@@ -112,7 +113,17 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             match rule.category() {
                 Category::Fluff => {}
                 Category::Literals | Category::Constants | Category::Variables => {
-                    expressions.push(expression.unwrap())
+                    expressions.push(expression.unwrap());
+                    // if value directly follows a single-argument function, push function to output
+                    if let Some((rule, expr)) = operator_stack.last() {
+                        if rule.category() == Category::Functions
+                            && rule.binding().is_some()
+                            && rule.binding().as_ref().unwrap().0.num_inputs == 1
+                            && expr.is_some()
+                        {
+                            expressions.push(operator_stack.pop().unwrap().1.unwrap());
+                        }
+                    }
                 }
                 Category::Functions => operator_stack.push((rule, expression)),
                 Category::Operators | Category::ImplicitOperators => {
@@ -225,10 +236,6 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             }
         }
 
-        for i in &expressions {
-            log::info!("{}", i.as_ref().to_string());
-        }
-
         let equation = Equation::new(expressions, variables);
 
         // run through equation to check for any syntax errors that were not caught by the rules
@@ -319,9 +326,9 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
         }
 
         // Multiple rules match the string and are valid after the last token:
-        // sort rules descending by rule priority and then by number of characters matched
-        matching_rules.sort_by(|a, b| match a.0.priority().cmp(&b.0.priority()) {
-            std::cmp::Ordering::Equal => a.1.len().cmp(&b.1.len()),
+        // sort rules descending by number of characters matched and then by rule priority
+        matching_rules.sort_by(|a, b| match a.1.len().cmp(&b.1.len()) {
+            std::cmp::Ordering::Equal => a.0.priority().cmp(&b.0.priority()),
             unequal => unequal,
         });
 
