@@ -20,10 +20,14 @@ egui = "0.31.1"
 name = "whetstone"
 path = "src/lib.rs"
 
-[[bin]]
+[[test]]
 name = "whetstone-test"
 path = "src/test.rs"
 
 [[bin]]
 name = "whetstone-demo"
 path = "src/demo.rs"
+
+[[bin]]
+name = "whetstone-sandbox"
+path = "src/sandbox.rs"

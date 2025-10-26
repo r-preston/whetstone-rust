@@ -225,6 +225,10 @@ impl<T: NumericType<ExprType = T>> Parser<T> {
             }
         }
 
+        for i in &expressions {
+            log::info!("{}", i.as_ref().to_string());
+        }
+
         let equation = Equation::new(expressions, variables);
 
         // run through equation to check for any syntax errors that were not caught by the rules
