@@ -9,6 +9,9 @@ Flexible crate for parsing and evaluating strings representing equations.
 ### Plug and play with built-in syntax
 - Standard
 - LaTeX
+### Includes demo application under demo/ to have a play!
+### Includes suite of tests with many examples of usage
+
 
 ## Roadmap
 - Support for wrapping functions/operators like |...|

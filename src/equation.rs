@@ -1,5 +1,6 @@
 use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::rc::Rc;
 
 use crate::expressions::Expression;
@@ -82,5 +83,11 @@ impl<T: NumericType> Equation<T> {
 
     pub fn variables(&self) -> &[String] {
         &self.variable_names
+    }
+}
+
+impl<T: NumericType> Debug for Equation<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "f({})", self.variable_names.join(", "))
     }
 }

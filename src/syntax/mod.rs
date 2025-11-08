@@ -1,7 +1,11 @@
 pub(crate) mod ruleset;
 
 use serde::Deserialize;
-use std::{collections::HashMap, fmt};
+use std::{
+    collections::HashMap,
+    fmt,
+    ops::{Deref, DerefMut},
+};
 
 use crate::{error::return_error, Error, ErrorType};
 
@@ -83,7 +87,7 @@ pub(crate) fn get_builtin_ruleset(syntax: &Syntax) -> Option<&'static str> {
     }
 }
 
-pub fn get_definitions(syntax: &Syntax) -> Result<RuleCollectionDefinition, Error> {
+pub fn get_definitions(syntax: Syntax) -> Result<RuleCollectionDefinition, Error> {
     let json = match get_builtin_ruleset(&syntax) {
         Some(json) => json,
         None => {
@@ -120,5 +124,19 @@ impl fmt::Display for Category {
             Self::Separators => write!(f, "Separators"),
             Self::Fluff => write!(f, "Fluff"),
         }
+    }
+}
+
+impl Deref for RuleCollectionDefinition {
+    type Target = HashMap<Category, RuleCategoryDefinition>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for RuleCollectionDefinition {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }

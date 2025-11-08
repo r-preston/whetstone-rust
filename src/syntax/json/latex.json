@@ -217,7 +217,7 @@
         ]
     },
     "Literals": {
-        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "may_follow": ["Operators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
                 "pattern": "-?[0-9]+(?:\\.[0-9]+)?",
@@ -229,7 +229,7 @@
         "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
-                "pattern": "\\\\?[a-zA-Z0-9\\-]+(?:[\\\\_{^]\\\\?[{}a-zA-Z0-9\\-]+\\}?)*",
+                "pattern": "(?:\\\\\\{[a-zA-Z][a-zA-Z0-9]*\\}|\\\\?[a-zA-Z][a-zA-Z0-9]*)",
                 "pattern_is_regex": true
             }
         ]

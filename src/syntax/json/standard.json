@@ -154,7 +154,7 @@
         ]
     },
     "Literals": {
-        "may_follow": ["Operators", "ImplicitOperators", "Functions", "OpenBrackets", "Separators"],
+        "may_follow": ["Operators", "Functions", "OpenBrackets", "Separators"],
         "rules": [
             {
                 "pattern": "-?[0-9]+(?:\\.[0-9]+)?",
