@@ -20,6 +20,8 @@ Flexible crate for parsing and evaluating strings representing equations.
 
 ## Usage
 
+[Find whetstone on crates.io](https://crates.io/crates/whetstone)
+
 ```rust
 use whetstone::{Parser, syntax::Syntax};
 
