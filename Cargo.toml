@@ -2,7 +2,13 @@
 name = "whetstone"
 version = "1.0.0"
 authors = ["Rowan Preston <rowan.t.preston@gmail.com>"]
+description = "Parses and evaluate string representations of mathematical expressions in various syntaxes" 
 edition = "2021"
+license = "GPL-3.0"
+repository = "https://github.com/r-preston/whetstone-rust"
+readme = "README.md"
+keywords = ["mathematics", "parsing", "text-processing", "expressions"]
+categories = ["mathematics", "parsing", "text-processing"]
 
 [dependencies]
 num-traits = "0.2.19"
